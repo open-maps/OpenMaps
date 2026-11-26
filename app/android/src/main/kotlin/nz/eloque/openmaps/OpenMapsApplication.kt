@@ -1,7 +1,9 @@
 package nz.eloque.openmaps
 
 import android.app.Application
+import android.content.ActivityNotFoundException
 import android.content.Intent
+import android.provider.CalendarContract
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
@@ -12,6 +14,7 @@ import nz.eloque.openmaps.core.model.ServiceCatalog
 import nz.eloque.openmaps.core.model.TripWatcher
 import nz.eloque.openmaps.core.model.VoiceGuidance
 import nz.eloque.openmaps.core.platform.Contacts
+import nz.eloque.openmaps.core.platform.EventCalendar
 import nz.eloque.openmaps.core.platform.Files
 import nz.eloque.openmaps.core.platform.ReminderScheduler
 import nz.eloque.openmaps.core.platform.Sharer
@@ -76,6 +79,25 @@ class OpenMapsApplication : Application() {
                     single { AndroidContacts(this@OpenMapsApplication) }
                     single<Contacts> { get<AndroidContacts>() }
                     single<TripWatcher> { WorkManagerTripWatcher(this@OpenMapsApplication, get(), MainScope()) }
+                    single<EventCalendar> {
+                        EventCalendar { event ->
+                            val insert =
+                                Intent(Intent.ACTION_INSERT)
+                                    .setData(CalendarContract.Events.CONTENT_URI)
+                                    .putExtra(CalendarContract.EXTRA_EVENT_BEGIN_TIME, event.start.toEpochMilliseconds())
+                                    .putExtra(CalendarContract.EXTRA_EVENT_END_TIME, event.end.toEpochMilliseconds())
+                                    .putExtra(CalendarContract.Events.TITLE, event.title)
+                                    .putExtra(CalendarContract.Events.EVENT_LOCATION, event.location)
+                                    .putExtra(CalendarContract.Events.DESCRIPTION, event.description)
+                                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                            try {
+                                startActivity(insert)
+                                true
+                            } catch (_: ActivityNotFoundException) {
+                                false
+                            }
+                        }
+                    }
                     single<Sharer> {
                         Sharer { text ->
                             val send = Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT, text)

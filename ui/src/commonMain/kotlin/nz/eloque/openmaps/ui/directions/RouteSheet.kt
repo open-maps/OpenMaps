@@ -153,6 +153,7 @@ private fun RouteTimeline(
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(bottom = 8.dp)) {
                 ReminderButton(itinerary, destinationName, snackbar)
                 WatchButton(itinerary, destinationName, snackbar)
+                CalendarButton(itinerary, destinationName, snackbar)
             }
             HorizontalDivider()
         }
