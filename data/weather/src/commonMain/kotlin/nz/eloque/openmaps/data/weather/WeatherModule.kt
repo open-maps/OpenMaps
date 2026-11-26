@@ -50,14 +50,15 @@ internal const val LIBREWXR = "https://api.librewxr.net"
 /** The settings this module's sources read. */
 val weatherServiceSettings = listOf(RainRadarServer, WeatherWarningsServer, WeatherForecastServer)
 
-val weatherModule =
+/** [language] is the device language, used where a warning comes in several. */
+fun weatherModule(language: () -> String? = { null }) =
     module {
         single<RainRadar> {
             val settings = get<SettingsStore>()
             RainViewerRadar(get(), settings.serviceValue(RainRadarServer.id).map { it ?: LIBREWXR }, settings.radarOptions)
         }
         single<WeatherWarnings> {
-            LibreWxrWarnings(get(), get<SettingsStore>().serviceValue(WeatherWarningsServer.id).map { it ?: LIBREWXR })
+            LibreWxrWarnings(get(), get<SettingsStore>().serviceValue(WeatherWarningsServer.id).map { it ?: LIBREWXR }, language = language)
         }
         single<WeatherForecasts> {
             OpenMeteoForecasts(get(), get<SettingsStore>().serviceValue(WeatherForecastServer.id).map { it ?: OPEN_METEO })

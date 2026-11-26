@@ -46,6 +46,7 @@ internal class LibreWxrWarnings(
     private val baseUrl: Flow<String?>,
     private val clock: Clock = Clock.System,
     private val keep: Duration = 10.minutes,
+    private val language: () -> String? = { null },
 ) : WeatherWarnings {
     private val mutex = Mutex()
     private val cache = mutableMapOf<Pair<Long, Long>, Pair<Instant, List<WeatherWarning>>>()
@@ -65,7 +66,9 @@ internal class LibreWxrWarnings(
                     parameter("simplify", SIMPLIFY_METRES)
                 }.body<AlertsDto>()
                 .features
-                .map { it.properties.toWarning() }
+                .map { it.properties }
+                .inLanguage(language())
+                .map { it.toWarning() }
                 .filter { warning -> warning.end?.let { it > now } ?: true }
                 .sortedWith(compareByDescending<WeatherWarning> { it.severity }.thenBy { it.start })
         mutex.withLock {
@@ -100,3 +103,18 @@ internal fun AlertDto.toWarning() =
 
 private const val CELLS_PER_DEGREE = 100.0
 private const val SIMPLIFY_METRES = 50_000
+
+/** Keeps one copy of warnings issued in several languages, preferring [language] and then English. */
+internal fun List<AlertDto>.inLanguage(language: String?): List<AlertDto> {
+    val preferred = listOfNotNull(language?.lowercase(), "en")
+    return groupBy { it.uri?.let(::withoutLanguage) ?: it }
+        .values
+        .map { copies -> preferred.firstNotNullOfOrNull { lang -> copies.find { it.uri?.let(::languageOf) == lang } } ?: copies.first() }
+}
+
+/** DWD publishes each warning as /de/….DEU.xml and /en/….ENG.xml under the same identifier. */
+private val LanguageCopy = Regex("/(de|en)/(.*)\\.(DEU|ENG)\\.xml$")
+
+private fun withoutLanguage(uri: String) = LanguageCopy.replace(uri, "/$2.xml")
+
+private fun languageOf(uri: String) = LanguageCopy.find(uri)?.groupValues?.get(1)

@@ -66,6 +66,19 @@ class LibreWxrWarningsTest {
         }
 
     @Test
+    fun aWarningIssuedInTwoLanguagesShowsOnceInTheDeviceLanguage() {
+        val id = "2.49.0.0.276.0.DWD.PVW.1795713540000.4e2826aa"
+        val copies =
+            listOf(
+                AlertDto(title = "Official WARNING of ICY SURFACES", uri = "https://www.dwd.de/DWD/warnungen/cap-feed/en/$id.ENG.xml"),
+                AlertDto(title = "Amtliche WARNUNG vor GLÄTTE", uri = "https://www.dwd.de/DWD/warnungen/cap-feed/de/$id.DEU.xml"),
+                AlertDto(title = "Windwarnung", uri = "https://feeds.meteoalarm.org/api/v1/warnings/feeds-austria/3c308d03"),
+            )
+        assertEquals(listOf("Amtliche WARNUNG vor GLÄTTE", "Windwarnung"), copies.inLanguage("de").map { it.title })
+        assertEquals(listOf("Official WARNING of ICY SURFACES", "Windwarnung"), copies.inLanguage("fr").map { it.title })
+    }
+
+    @Test
     fun noServerMeansNoWarnings() =
         runTest {
             val client = HttpClient(MockEngine { error("no request expected") })

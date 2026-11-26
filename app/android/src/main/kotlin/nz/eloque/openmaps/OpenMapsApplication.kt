@@ -87,7 +87,7 @@ class OpenMapsApplication : Application() {
                 routingModule(language = { Locale.getDefault().toLanguageTag() }),
                 geocodingModule(language = { Locale.getDefault().language }),
                 fuelModule,
-                weatherModule,
+                weatherModule(language = { Locale.getDefault().language }),
                 reviewsModule,
                 storageModule,
                 uiModule,
