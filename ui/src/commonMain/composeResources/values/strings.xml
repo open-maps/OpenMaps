@@ -136,6 +136,9 @@
     <string name="transfers_any">Any</string>
     <string name="transfers_direct">Direct only</string>
     <string name="transfers_up_to">Up to %1$d</string>
+    <string name="options_transfer_time">Time to change</string>
+    <string name="transfer_time_usual">Usual</string>
+    <string name="transfer_time_extra">+%1$d min</string>
     <string name="options_walking">Walking speed</string>
     <string name="walking_slow">Slow</string>
     <string name="walking_normal">Normal</string>

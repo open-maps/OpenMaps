@@ -179,6 +179,7 @@ class MotisClientTest {
                             modes = setOf(ModeGroup.LONG_DISTANCE_TRAIN, ModeGroup.BUS),
                             maxTransfers = 0,
                             walkingSpeed = WalkingSpeed.SLOW,
+                            extraTransferMinutes = 10,
                             wheelchair = true,
                             bikeOnBoard = true,
                             avoidReservations = true,
@@ -189,6 +190,7 @@ class MotisClientTest {
             val defaults = requests[0].parameters
             assertEquals(null, defaults["transitModes"])
             assertEquals(null, defaults["maxTransfers"])
+            assertEquals(null, defaults["additionalTransferTime"])
             assertEquals(null, defaults["pedestrianProfile"])
             assertEquals(null, defaults["requireBikeTransport"])
             assertEquals(null, defaults["noCompulsoryReservation"])
@@ -197,6 +199,7 @@ class MotisClientTest {
             val custom = requests[1].parameters
             assertEquals("HIGHSPEED_RAIL,LONG_DISTANCE,NIGHT_RAIL,BUS,COACH,FUNICULAR,AERIAL_LIFT,OTHER", custom["transitModes"])
             assertEquals("0", custom["maxTransfers"])
+            assertEquals("10", custom["additionalTransferTime"])
             assertEquals("0.9", custom["pedestrianSpeed"])
             assertEquals("WHEELCHAIR", custom["pedestrianProfile"])
             assertEquals("true", custom["requireBikeTransport"])

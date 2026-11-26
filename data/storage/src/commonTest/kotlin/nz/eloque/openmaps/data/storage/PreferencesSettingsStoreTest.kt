@@ -43,7 +43,7 @@ class PreferencesSettingsStoreTest {
         val settings = MapSettings()
         val options =
             RouteOptions(setOf(ModeGroup.BUS, ModeGroup.FERRY), maxTransfers = 1, WalkingSpeed.SLOW, wheelchair = true, bikeOnBoard = true)
-                .copy(vehicle = Vehicle.TRUCK, truck = VehicleSize(3.2, 2.3, 7.5, 3.5), bike = BikeType.MOUNTAIN)
+                .copy(extraTransferMinutes = 10, vehicle = Vehicle.TRUCK, truck = VehicleSize(3.2, 2.3, 7.5, 3.5), bike = BikeType.MOUNTAIN)
         PreferencesSettingsStore(settings).setRouteOptions(options)
         assertEquals(options, PreferencesSettingsStore(settings).routeOptions.value)
     }

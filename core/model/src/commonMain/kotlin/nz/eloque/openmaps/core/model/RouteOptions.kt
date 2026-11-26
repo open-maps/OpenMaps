@@ -24,6 +24,8 @@ data class RouteOptions(
     /** Null for no limit. */
     val maxTransfers: Int? = null,
     val walkingSpeed: WalkingSpeed = WalkingSpeed.NORMAL,
+    /** Minutes added to the time each station needs for changing. */
+    val extraTransferMinutes: Int = 0,
     val wheelchair: Boolean = false,
     /** Whether shared bikes and scooters may take the user to and from public transport. */
     val sharedVehicles: Boolean = false,

@@ -31,6 +31,7 @@ internal class PreferencesSettingsStore(
         settings.putString(MODES, options.modes.joinToString(",") { it.name })
         settings.putInt(MAX_TRANSFERS, options.maxTransfers ?: NO_LIMIT)
         settings.putString(WALKING_SPEED, options.walkingSpeed.name)
+        settings.putInt(EXTRA_TRANSFER_MINUTES, options.extraTransferMinutes)
         settings.putBoolean(WHEELCHAIR, options.wheelchair)
         settings.putBoolean(SHARED_VEHICLES, options.sharedVehicles)
         settings.putBoolean(BIKE_ON_BOARD, options.bikeOnBoard)
@@ -168,6 +169,7 @@ internal class PreferencesSettingsStore(
             maxTransfers = settings.getInt(MAX_TRANSFERS, NO_LIMIT).takeIf { it >= 0 },
             walkingSpeed =
                 WalkingSpeed.entries.firstOrNull { it.name == settings.getStringOrNull(WALKING_SPEED) } ?: defaults.walkingSpeed,
+            extraTransferMinutes = settings.getInt(EXTRA_TRANSFER_MINUTES, defaults.extraTransferMinutes).coerceAtLeast(0),
             wheelchair = settings.getBoolean(WHEELCHAIR, defaults.wheelchair),
             sharedVehicles = settings.getBoolean(SHARED_VEHICLES, defaults.sharedVehicles),
             bikeOnBoard = settings.getBoolean(BIKE_ON_BOARD, defaults.bikeOnBoard),
@@ -185,6 +187,7 @@ internal class PreferencesSettingsStore(
         const val MODES = "route.modes"
         const val MAX_TRANSFERS = "route.maxTransfers"
         const val WALKING_SPEED = "route.walkingSpeed"
+        const val EXTRA_TRANSFER_MINUTES = "route.extraTransferMinutes"
         const val WHEELCHAIR = "route.wheelchair"
         const val SHARED_VEHICLES = "route.sharedVehicles"
         const val BIKE_ON_BOARD = "route.bikeOnBoard"

@@ -183,6 +183,7 @@ private fun HttpRequestBuilder.routeOptions(
         parameter("transitModes", modes.joinToString(","))
     }
     options.maxTransfers?.let { parameter("maxTransfers", it) }
+    if (options.extraTransferMinutes > 0 && withTransit) parameter("additionalTransferTime", options.extraTransferMinutes)
     when (options.walkingSpeed) {
         WalkingSpeed.SLOW -> parameter("pedestrianSpeed", SLOW_WALK_METERS_PER_SECOND)
         WalkingSpeed.FAST -> parameter("pedestrianSpeed", FAST_WALK_METERS_PER_SECOND)

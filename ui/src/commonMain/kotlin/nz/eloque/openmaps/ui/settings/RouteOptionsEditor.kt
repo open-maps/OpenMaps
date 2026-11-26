@@ -55,12 +55,15 @@ import nz.eloque.openmaps.ui.resources.options_bike_on_board_detail
 import nz.eloque.openmaps.ui.resources.options_driving
 import nz.eloque.openmaps.ui.resources.options_shared_vehicles
 import nz.eloque.openmaps.ui.resources.options_shared_vehicles_detail
+import nz.eloque.openmaps.ui.resources.options_transfer_time
 import nz.eloque.openmaps.ui.resources.options_transfers
 import nz.eloque.openmaps.ui.resources.options_transport
 import nz.eloque.openmaps.ui.resources.options_vehicle
 import nz.eloque.openmaps.ui.resources.options_walking
 import nz.eloque.openmaps.ui.resources.options_wheelchair
 import nz.eloque.openmaps.ui.resources.options_wheelchair_detail
+import nz.eloque.openmaps.ui.resources.transfer_time_extra
+import nz.eloque.openmaps.ui.resources.transfer_time_usual
 import nz.eloque.openmaps.ui.resources.transfers_any
 import nz.eloque.openmaps.ui.resources.transfers_direct
 import nz.eloque.openmaps.ui.resources.transfers_up_to
@@ -79,6 +82,8 @@ import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 
 private val TransferChoices = listOf(null, 0, 1, 2)
+
+private val ExtraTransferChoices = listOf(0, 5, 10, 15)
 
 /** Edits how routes are planned, only for [mode] when set. The last selected kind of transport cannot be switched off. */
 @Composable
@@ -164,6 +169,23 @@ private fun TransitOptions(
                                 null -> stringResource(Res.string.transfers_any)
                                 0 -> stringResource(Res.string.transfers_direct)
                                 else -> stringResource(Res.string.transfers_up_to, choice)
+                            },
+                        )
+                    },
+                )
+            }
+        }
+        OptionGroup(Res.string.options_transfer_time) {
+            ExtraTransferChoices.forEach { minutes ->
+                FilterChip(
+                    selected = options.extraTransferMinutes == minutes,
+                    onClick = { onChange(options.copy(extraTransferMinutes = minutes)) },
+                    label = {
+                        Text(
+                            if (minutes == 0) {
+                                stringResource(Res.string.transfer_time_usual)
+                            } else {
+                                stringResource(Res.string.transfer_time_extra, minutes)
                             },
                         )
                     },
