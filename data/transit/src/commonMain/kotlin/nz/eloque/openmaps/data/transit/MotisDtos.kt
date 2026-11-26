@@ -39,6 +39,7 @@ internal data class PlaceDto(
     val scheduledArrival: String? = null,
     val scheduledDeparture: String? = null,
     val track: String? = null,
+    val scheduledTrack: String? = null,
     val cancelled: Boolean = false,
     val pickupType: String? = null,
     val dropoffType: String? = null,
@@ -174,6 +175,8 @@ internal data class StopTimeDto(
     val cancelled: Boolean = false,
     val tripCancelled: Boolean = false,
     val pickupDropoffType: String? = null,
+    val tripFrom: PlaceDto? = null,
+    val tripShortName: String? = null,
 )
 
 @Serializable

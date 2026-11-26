@@ -105,12 +105,17 @@ internal class MotisTransitRepository(
         time: Instant?,
         count: Int,
         pageCursor: String?,
+        arrivals: Boolean,
     ): DeparturesResult =
-        stopTimes {
+        stopTimes(arrivals) {
             parameter("stopId", stopId)
             parameter("withAlerts", true)
             time?.let { parameter("time", it.asParameter()) }
             parameter("n", count)
+            if (arrivals) {
+                parameter("arriveBy", true)
+                parameter("direction", "LATER")
+            }
             pageCursor?.let { parameter("pageCursor", it) }
         }
 
@@ -123,17 +128,8 @@ internal class MotisTransitRepository(
             .filter { it.isLine() }
             .distinctBy { it.label to it.mode }
             .sortedWith(
-                compareBy<Line> {
-                    LineOrder.indexOf(it.mode).let { i ->
-                        if (i <
-                            0
-                        ) {
-                            LineOrder.size
-                        } else {
-                            i
-                        }
-                    }
-                }.thenBy(NaturalOrder) { it.label },
+                compareBy<Line> { LineOrder.indexOf(it.mode).takeIf { i -> i >= 0 } ?: LineOrder.size }
+                    .thenBy(NaturalOrder) { it.label },
             )
 
     override suspend fun departuresNear(
@@ -151,7 +147,10 @@ internal class MotisTransitRepository(
         language()?.takeIf { it.isNotBlank() }?.let { parameter("language", it) }
     }
 
-    private suspend fun stopTimes(block: HttpRequestBuilder.() -> Unit): DeparturesResult {
+    private suspend fun stopTimes(
+        arrivals: Boolean = false,
+        block: HttpRequestBuilder.() -> Unit,
+    ): DeparturesResult {
         val response: StopTimesResponseDto =
             client
                 .get("${baseUrl()}/v6/stoptimes") {
@@ -159,8 +158,8 @@ internal class MotisTransitRepository(
                     inLanguage()
                 }.body()
         return DeparturesResult(
-            departures = response.stopTimes.mapNotNull { it.toDeparture() },
-            laterCursor = response.nextPageCursor,
+            departures = response.stopTimes.mapNotNull { it.toDeparture(arrivals) },
+            laterCursor = response.nextPageCursor?.takeIf { it.isNotEmpty() },
         )
     }
 }

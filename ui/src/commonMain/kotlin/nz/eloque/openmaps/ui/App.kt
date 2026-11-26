@@ -577,7 +577,7 @@ fun App(
                                                     stop = stop,
                                                     map = map,
                                                     onDirections = { backStack.add(DirectionsKey(from = null, to = stop.toEndpoint())) },
-                                                    onOpenTrip = { backStack.add(TripKey(it, stop.name)) },
+                                                    onOpenTrip = { tripId, stopName -> backStack.add(TripKey(tripId, stopName)) },
                                                 )
                                             }
                                             entry<DirectionsKey> { directions ->

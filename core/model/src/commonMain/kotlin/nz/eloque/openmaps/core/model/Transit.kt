@@ -25,6 +25,8 @@ data class Waypoint(
     val canBoard: Boolean = true,
     /** False where the vehicle stops but passengers may not get off. */
     val canAlight: Boolean = true,
+    /** The timetabled platform. */
+    val scheduledPlatform: String? = null,
 )
 
 data class Line(
@@ -153,6 +155,7 @@ fun List<Itinerary>.best(arriveBy: Boolean = false): Itinerary? =
             .thenBy { it.duration },
     )
 
+/** A run calling at a stop, leaving it or, on an arrivals board, arriving there. */
 data class Departure(
     val stopId: String?,
     val stopName: String,
@@ -164,6 +167,26 @@ data class Departure(
     val tripId: String?,
     val isCancelled: Boolean,
     val alerts: List<Alert>,
-    /** False for a run that only lets passengers off here. */
-    val canBoard: Boolean = true,
+    /** False where passengers may not get on here, or on an arrivals board get off. */
+    val passengersAllowed: Boolean = true,
+    /** The timetabled platform. */
+    val scheduledPlatform: String? = null,
+    /** Where the run started. */
+    val origin: String? = null,
+    val tripName: String? = null,
 )
+
+/** The timetabled platform when live data moved the run to another, otherwise null. */
+val Departure.movedFrom: String?
+    get() = movedFrom(platform, scheduledPlatform, time.isRealTime)
+
+/** The timetabled platform when live data moved the run to another, otherwise null. */
+val Waypoint.movedFrom: String?
+    get() = movedFrom(platform, scheduledPlatform, (departure ?: arrival)?.isRealTime == true)
+
+// Without live data a difference is two sources naming one platform differently, not a change.
+private fun movedFrom(
+    platform: String?,
+    scheduled: String?,
+    live: Boolean,
+): String? = scheduled.takeIf { live && it != null && platform != null && it != platform }

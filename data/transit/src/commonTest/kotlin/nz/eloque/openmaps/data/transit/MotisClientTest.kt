@@ -129,6 +129,18 @@ class MotisClientTest {
         }
 
     @Test
+    fun arrivalsAreAskedForFromTheStartTimeOnwards() =
+        runTest {
+            val result =
+                MotisTransitRepository(client(STOP_TIMES_JSON), { TRANSITOUS_API })
+                    .departures("de-DELFI_000008400058", arrivals = true)
+            val parameters = requests.single().parameters
+            assertEquals("true", parameters["arriveBy"])
+            assertEquals("LATER", parameters["direction"])
+            assertEquals("LATER|1794604560", result.laterCursor)
+        }
+
+    @Test
     fun timetablesAreAskedForInTheDeviceLanguage() =
         runTest {
             MotisTransitRepository(client(STOP_TIMES_JSON), { TRANSITOUS_API }) { "fr" }.departures("be-sncb_S8813003")

@@ -46,6 +46,7 @@ import nz.eloque.openmaps.core.model.SharedRental
 import nz.eloque.openmaps.core.model.TransitRepository
 import nz.eloque.openmaps.core.model.TransportMode
 import nz.eloque.openmaps.core.model.Waypoint
+import nz.eloque.openmaps.core.model.movedFrom
 import nz.eloque.openmaps.map.MapController
 import nz.eloque.openmaps.ui.components.AlertNote
 import nz.eloque.openmaps.ui.components.Alternatives
@@ -60,6 +61,7 @@ import nz.eloque.openmaps.ui.components.formatDuration
 import nz.eloque.openmaps.ui.components.icon
 import nz.eloque.openmaps.ui.components.label
 import nz.eloque.openmaps.ui.components.loadOnce
+import nz.eloque.openmaps.ui.components.platformLabel
 import nz.eloque.openmaps.ui.components.ruleText
 import nz.eloque.openmaps.ui.components.timeRange
 import nz.eloque.openmaps.ui.components.withoutLinePrefix
@@ -69,7 +71,6 @@ import nz.eloque.openmaps.ui.resources.bike_leg
 import nz.eloque.openmaps.ui.resources.drive_leg
 import nz.eloque.openmaps.ui.resources.guide_start
 import nz.eloque.openmaps.ui.resources.navigation_simulate
-import nz.eloque.openmaps.ui.resources.platform
 import nz.eloque.openmaps.ui.resources.rental_leg
 import nz.eloque.openmaps.ui.resources.rental_pick_up
 import nz.eloque.openmaps.ui.resources.rental_return
@@ -298,9 +299,9 @@ internal fun StopLine(
                 Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
             }
             if (emphasized) {
-                waypoint.platform?.let {
+                platformLabel(waypoint.platform ?: waypoint.scheduledPlatform, waypoint.movedFrom)?.let {
                     Text(
-                        stringResource(Res.string.platform, it),
+                        it,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )

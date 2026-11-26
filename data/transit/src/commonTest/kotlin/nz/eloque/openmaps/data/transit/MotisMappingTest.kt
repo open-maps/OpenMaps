@@ -145,3 +145,46 @@ class MotisMappingTest {
         assertTrue(leg.alternatives.isEmpty())
     }
 }
+
+class StopTimeMappingTest {
+    private val stopTime =
+        StopTimeDto(
+            place =
+                PlaceDto(
+                    name = "Karlsruhe Hbf",
+                    lat = 49.0,
+                    lon = 8.4,
+                    stopId = "k",
+                    arrival = "2026-11-26T10:03:00Z",
+                    scheduledArrival = "2026-11-26T10:00:00Z",
+                    departure = "2026-11-26T10:06:00Z",
+                    scheduledDeparture = "2026-11-26T10:05:00Z",
+                    track = "7",
+                    scheduledTrack = "4",
+                ),
+            mode = "REGIONAL_RAIL",
+            realTime = true,
+            displayName = "RE2",
+            tripShortName = "004739",
+            tripFrom = PlaceDto(name = "Mannheim Hbf", lat = 49.5, lon = 8.5),
+            pickupDropoffType = "NOT_ALLOWED",
+        )
+
+    @Test
+    fun aDepartureKeepsBothPlatformsAndTheTrainNumber() {
+        val departure = stopTime.toDeparture()!!
+        assertEquals(Instant.parse("2026-11-26T10:05:00Z"), departure.time.scheduled)
+        assertEquals("7", departure.platform)
+        assertEquals("4", departure.scheduledPlatform)
+        assertEquals("4739", departure.tripName)
+        assertFalse(departure.passengersAllowed)
+    }
+
+    @Test
+    fun anArrivalUsesTheArrivalTimeAndNamesWhereTheRunStarted() {
+        val arrival = stopTime.toDeparture(arrival = true)!!
+        assertEquals(Instant.parse("2026-11-26T10:00:00Z"), arrival.time.scheduled)
+        assertEquals(Instant.parse("2026-11-26T10:03:00Z"), arrival.time.actual)
+        assertEquals("Mannheim Hbf", arrival.origin)
+    }
+}

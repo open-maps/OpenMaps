@@ -105,6 +105,7 @@ internal fun PlaceDto.toWaypoint(realTime: Boolean): Waypoint =
         location = LatLng(lat, lon),
         stopId = stopId,
         platform = track,
+        scheduledPlatform = scheduledTrack,
         arrival = eventTime(scheduledArrival, arrival, realTime),
         departure = eventTime(scheduledDeparture, departure, realTime),
         isCancelled = cancelled,
@@ -239,20 +240,29 @@ internal fun ItineraryDto.toItinerary(): Itinerary {
     )
 }
 
-internal fun StopTimeDto.toDeparture(): Departure? {
-    val time = eventTime(place.scheduledDeparture, place.departure, realTime) ?: return null
+internal fun StopTimeDto.toDeparture(arrival: Boolean = false): Departure? {
+    val time =
+        if (arrival) {
+            eventTime(place.scheduledArrival, place.arrival, realTime)
+        } else {
+            eventTime(place.scheduledDeparture, place.departure, realTime)
+        } ?: return null
+    val line = line(mode, routeShortName, displayName, routeLongName, routeColor, routeTextColor, agencyName)
     return Departure(
         stopId = place.stopId,
         stopName = place.name,
         stopLocation = LatLng(place.lat, place.lon),
-        line = line(mode, routeShortName, displayName, routeLongName, routeColor, routeTextColor, agencyName),
+        line = line,
         headsign = headsign,
         time = time,
         platform = place.track,
         tripId = tripId,
         isCancelled = cancelled || tripCancelled,
         alerts = place.alerts.mapNotNull { it.toAlert() },
-        canBoard = pickupDropoffType != NOT_ALLOWED,
+        passengersAllowed = pickupDropoffType != NOT_ALLOWED,
+        scheduledPlatform = place.scheduledTrack,
+        origin = tripFrom?.name,
+        tripName = tripName(tripShortName, line.label),
     )
 }
 

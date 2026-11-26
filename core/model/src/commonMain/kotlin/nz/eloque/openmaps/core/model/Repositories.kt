@@ -77,6 +77,7 @@ interface TransitRepository {
         time: Instant? = null,
         count: Int = 30,
         pageCursor: String? = null,
+        arrivals: Boolean = false,
     ): DeparturesResult
 
     /** The lines that serve stop [stopId], whatever the time. */

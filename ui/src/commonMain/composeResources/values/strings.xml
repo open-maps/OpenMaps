@@ -18,6 +18,17 @@
     <string name="no_departures">No upcoming departures</string>
     <string name="board_now">Now</string>
     <string name="board_from">From %1$s</string>
+    <string name="arrivals">Arrivals</string>
+    <string name="no_arrivals">No upcoming arrivals</string>
+    <string name="board_by_line">By line</string>
+    <string name="board_timetable">Timetable</string>
+    <string name="board_choose_time">Choose a time</string>
+    <string name="board_more">Show more</string>
+    <string name="from_origin">from %1$s</string>
+    <string name="platform_short">Pl. %1$s</string>
+    <string name="platform_changed">Platform changed from %1$s</string>
+    <string name="today">Today</string>
+    <string name="tomorrow">Tomorrow</string>
     <string name="platform">Platform %1$s</string>
     <string name="cancelled">Cancelled</string>
     <string name="has_alerts">Service alerts, tap to show</string>
