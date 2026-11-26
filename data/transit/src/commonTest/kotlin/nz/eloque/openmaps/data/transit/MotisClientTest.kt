@@ -125,6 +125,16 @@ class MotisClientTest {
             assertEquals(8.minutes, intercity.time.delay)
             assertEquals("2a", intercity.platform)
             assertTrue(intercity.time.isRealTime)
+            assertNull(requests.single().parameters["language"])
+        }
+
+    @Test
+    fun timetablesAreAskedForInTheDeviceLanguage() =
+        runTest {
+            MotisTransitRepository(client(STOP_TIMES_JSON), { TRANSITOUS_API }) { "fr" }.departures("be-sncb_S8813003")
+            MotisTransitRepository(client(PLAN_JSON), { TRANSITOUS_API }) { "fr" }
+                .plan(PlanRequest(PlanTarget.Stop("a"), PlanTarget.Stop("b"), time = null))
+            assertEquals(listOf("fr", "fr"), requests.map { it.parameters["language"] })
         }
 
     @Test

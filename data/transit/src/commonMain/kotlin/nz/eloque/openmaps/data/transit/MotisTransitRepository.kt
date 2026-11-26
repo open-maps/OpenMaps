@@ -26,6 +26,7 @@ import kotlin.time.Instant
 internal class MotisTransitRepository(
     private val client: HttpClient,
     private val baseUrl: () -> String,
+    private val language: () -> String? = { null },
 ) : TransitRepository {
     override suspend fun stopsIn(bounds: GeoBounds): List<SearchResult.Stop> {
         val stops: List<PlaceDto> =
@@ -60,6 +61,7 @@ internal class MotisTransitRepository(
                     }
                     request.pageCursor?.let { parameter("pageCursor", it) }
                     parameter("joinInterlinedLegs", false)
+                    inLanguage()
                     if (request.withTransit) parameter("numLegAlternatives", LEG_ALTERNATIVES)
                     routeOptions(request.options, request.withTransit)
                 }.body()
@@ -77,6 +79,7 @@ internal class MotisTransitRepository(
                 .get("${baseUrl()}/v6/trip") {
                     parameter("tripId", tripId)
                     parameter("joinInterlinedLegs", false)
+                    inLanguage()
                 }.body()
         return response.toItinerary()
     }
@@ -87,6 +90,7 @@ internal class MotisTransitRepository(
                 .get("${baseUrl()}/v6/refresh-itinerary") {
                     parameter("itineraryId", id)
                     parameter("joinInterlinedLegs", false)
+                    inLanguage()
                     parameter("numLegAlternatives", LEG_ALTERNATIVES)
                 }
                 .body<ItineraryDto>()
@@ -143,8 +147,17 @@ internal class MotisTransitRepository(
             parameter("n", count)
         }
 
+    private fun HttpRequestBuilder.inLanguage() {
+        language()?.takeIf { it.isNotBlank() }?.let { parameter("language", it) }
+    }
+
     private suspend fun stopTimes(block: HttpRequestBuilder.() -> Unit): DeparturesResult {
-        val response: StopTimesResponseDto = client.get("${baseUrl()}/v6/stoptimes", block).body()
+        val response: StopTimesResponseDto =
+            client
+                .get("${baseUrl()}/v6/stoptimes") {
+                    block()
+                    inLanguage()
+                }.body()
         return DeparturesResult(
             departures = response.stopTimes.mapNotNull { it.toDeparture() },
             laterCursor = response.nextPageCursor,
