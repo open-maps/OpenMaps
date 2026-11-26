@@ -79,6 +79,9 @@ interface TransitRepository {
         pageCursor: String? = null,
     ): DeparturesResult
 
+    /** The lines that serve stop [stopId], whatever the time. */
+    suspend fun lines(stopId: String): List<Line>
+
     suspend fun departuresNear(
         location: LatLng,
         radiusMeters: Int,

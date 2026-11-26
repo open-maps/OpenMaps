@@ -1,15 +1,12 @@
 package nz.eloque.openmaps.ui.directions
 
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -21,14 +18,17 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import nz.eloque.openmaps.core.model.Leg
 import nz.eloque.openmaps.map.MapController
+import nz.eloque.openmaps.ui.components.AlertNote
 import nz.eloque.openmaps.ui.components.LineChip
 import nz.eloque.openmaps.ui.components.LoadState
 import nz.eloque.openmaps.ui.components.LoadStateContent
+import nz.eloque.openmaps.ui.components.RideNotes
 import nz.eloque.openmaps.ui.components.rememberNow
 import nz.eloque.openmaps.ui.components.withoutLinePrefix
 import nz.eloque.openmaps.ui.navigation.TripKey
 import nz.eloque.openmaps.ui.resources.Res
 import nz.eloque.openmaps.ui.resources.towards
+import nz.eloque.openmaps.ui.resources.train_number
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
@@ -55,28 +55,27 @@ fun TripSheet(
         item {
             Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(bottom = 8.dp)) {
                 LineChip(leg.line)
-                leg.headsign?.let {
-                    Text(
-                        stringResource(Res.string.towards, it.withoutLinePrefix(leg.line)),
-                        style = MaterialTheme.typography.titleMedium,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.padding(start = 12.dp),
-                    )
+                Column(Modifier.padding(start = 12.dp)) {
+                    leg.headsign?.let {
+                        Text(
+                            stringResource(Res.string.towards, it.withoutLinePrefix(leg.line)),
+                            style = MaterialTheme.typography.titleMedium,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    }
+                    leg.tripName?.let {
+                        Text(
+                            stringResource(Res.string.train_number, it),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
                 }
             }
+            RideNotes(leg.copy(ticketUrl = null), Modifier.padding(bottom = 6.dp))
         }
-        items(leg.alerts) { alert ->
-            Row(verticalAlignment = Alignment.Top, modifier = Modifier.padding(bottom = 6.dp)) {
-                Icon(
-                    Icons.Default.Warning,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.size(18.dp),
-                )
-                Text(alert.header, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(start = 8.dp))
-            }
-        }
+        items(leg.alerts) { alert -> AlertNote(alert, Modifier.padding(bottom = 6.dp)) }
         item { HorizontalDivider(Modifier.padding(bottom = 8.dp)) }
         items(stops) { stop ->
             val time = stop.departure ?: stop.arrival ?: return@items

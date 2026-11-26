@@ -29,6 +29,8 @@ data class RouteOptions(
     val sharedVehicles: Boolean = false,
     /** Only connections whose vehicles are known to carry bikes. */
     val bikeOnBoard: Boolean = false,
+    /** Leaves out trains and buses that can only be taken with a reservation. */
+    val avoidReservations: Boolean = false,
     val avoidTolls: Boolean = false,
     val avoidMotorways: Boolean = false,
     val avoidFerries: Boolean = false,

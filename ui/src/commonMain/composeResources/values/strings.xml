@@ -21,6 +21,29 @@
     <string name="platform">Platform %1$s</string>
     <string name="cancelled">Cancelled</string>
     <string name="has_alerts">Service alerts, tap to show</string>
+    <string name="alert_no_service">No service</string>
+    <string name="alert_reduced_service">Reduced service</string>
+    <string name="alert_delays">Significant delays</string>
+    <string name="alert_detour">Detour</string>
+    <string name="alert_stop_moved">Stop moved</string>
+    <string name="alert_accessibility">Accessibility problem</string>
+    <string name="alert_modified_service">Changed service</string>
+    <string name="alert_additional_service">Extra service</string>
+    <string name="alert_more">More details</string>
+    <string name="alert_from">From %1$s</string>
+    <string name="alert_until">Until %1$s</string>
+    <string name="stop_cancelled">Stop cancelled</string>
+    <string name="stop_passed">Does not stop</string>
+    <string name="stop_exit_only">Exit only</string>
+    <string name="stop_boarding_only">Boarding only</string>
+    <string name="stay_seated">Stay seated at %1$s, continues as</string>
+    <string name="reservation_required">Reservation required</string>
+    <string name="tickets">Tickets</string>
+    <string name="alternatives">Other connections that fit</string>
+    <string name="alternative_from">from %1$s</string>
+    <string name="alternative_to">to %1$s</string>
+    <string name="show_less">Show less</string>
+    <string name="train_number">No. %1$s</string>
     <string name="now">now</string>
     <string name="minutes">%1$d min</string>
 
@@ -112,6 +135,8 @@
     <string name="options_shared_vehicles_detail">Ride to and from public transport</string>
     <string name="options_bike_on_board">Bring a bike</string>
     <string name="options_bike_on_board_detail">Only connections known to carry bikes</string>
+    <string name="options_avoid_reservations">Avoid compulsory reservation</string>
+    <string name="options_avoid_reservations_detail">Leave out trains and buses that need a booked seat</string>
     <string name="no_routes_bike_on_board">No connections are known to carry bikes here. Many operators do not publish this, so try without "Bring a bike".</string>
     <string name="options_driving">Driving</string>
     <string name="avoid_tolls">Avoid tolls</string>
@@ -157,7 +182,10 @@
     <string name="walk_leg">Walk %1$s</string>
     <string name="bike_leg">Cycle %1$s</string>
     <string name="drive_leg">Drive %1$s</string>
-    <string name="stops_count">%1$d stops</string>
+    <plurals name="stops_count">
+        <item quantity="one">%1$d stop</item>
+        <item quantity="other">%1$d stops</item>
+    </plurals>
     <string name="remind_me">Remind me</string>
     <string name="reminder_before">%1$d min before leaving</string>
     <string name="reminder_at">Reminder %1$s</string>

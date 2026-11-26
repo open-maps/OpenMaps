@@ -15,7 +15,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Navigation
-import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -48,16 +47,20 @@ import nz.eloque.openmaps.core.model.TransitRepository
 import nz.eloque.openmaps.core.model.TransportMode
 import nz.eloque.openmaps.core.model.Waypoint
 import nz.eloque.openmaps.map.MapController
+import nz.eloque.openmaps.ui.components.AlertNote
+import nz.eloque.openmaps.ui.components.Alternatives
 import nz.eloque.openmaps.ui.components.BookButton
 import nz.eloque.openmaps.ui.components.LineChip
 import nz.eloque.openmaps.ui.components.LoadState
 import nz.eloque.openmaps.ui.components.LoadStateContent
+import nz.eloque.openmaps.ui.components.RideNotes
 import nz.eloque.openmaps.ui.components.clockTime
 import nz.eloque.openmaps.ui.components.formatDistance
 import nz.eloque.openmaps.ui.components.formatDuration
 import nz.eloque.openmaps.ui.components.icon
 import nz.eloque.openmaps.ui.components.label
 import nz.eloque.openmaps.ui.components.loadOnce
+import nz.eloque.openmaps.ui.components.ruleText
 import nz.eloque.openmaps.ui.components.timeRange
 import nz.eloque.openmaps.ui.components.withoutLinePrefix
 import nz.eloque.openmaps.ui.navigation.RouteKey
@@ -73,8 +76,10 @@ import nz.eloque.openmaps.ui.resources.rental_return
 import nz.eloque.openmaps.ui.resources.route_expired
 import nz.eloque.openmaps.ui.resources.stops_count
 import nz.eloque.openmaps.ui.resources.towards
+import nz.eloque.openmaps.ui.resources.train_number
 import nz.eloque.openmaps.ui.resources.walk_leg
 import nz.eloque.openmaps.ui.resources.your_location
+import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
 
@@ -221,32 +226,26 @@ private fun TransitLegItem(leg: Leg.Transit) {
         StopLine(leg.start, leg.from, emphasized = true)
         Row(verticalAlignment = Alignment.CenterVertically) {
             LineChip(leg.line)
-            leg.headsign?.let {
-                Text(
-                    stringResource(Res.string.towards, it.withoutLinePrefix(leg.line)),
-                    modifier = Modifier.padding(start = 12.dp),
-                    maxLines = 1,
-                )
+            Column(Modifier.padding(start = 12.dp)) {
+                leg.headsign?.let { Text(stringResource(Res.string.towards, it.withoutLinePrefix(leg.line)), maxLines = 1) }
+                leg.tripName?.let {
+                    Text(
+                        stringResource(Res.string.train_number, it),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
             }
         }
-        leg.alerts.forEach { alert ->
-            Row(verticalAlignment = Alignment.Top) {
-                Icon(
-                    Icons.Default.Warning,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.size(18.dp),
-                )
-                Text(alert.header, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(start = 8.dp))
-            }
-        }
+        leg.alerts.forEach { AlertNote(it) }
+        RideNotes(leg)
         val stops = leg.intermediateStops.size + 1
         Row(
             Modifier.clickable(enabled = leg.intermediateStops.isNotEmpty()) { expanded = !expanded }.padding(vertical = 4.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
-                "${stringResource(Res.string.stops_count, stops)} · ${formatDuration(leg.end.actual - leg.start.actual)}",
+                "${pluralStringResource(Res.plurals.stops_count, stops, stops)} · ${formatDuration(leg.end.actual - leg.start.actual)}",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -260,6 +259,7 @@ private fun TransitLegItem(leg: Leg.Transit) {
             }
         }
         StopLine(leg.end, leg.to, emphasized = true)
+        Alternatives(leg, Modifier.padding(bottom = 4.dp))
     }
 }
 
@@ -294,6 +294,9 @@ internal fun StopLine(
                 fontWeight = if (emphasized) FontWeight.SemiBold else null,
                 style = if (emphasized) MaterialTheme.typography.bodyLarge else MaterialTheme.typography.bodyMedium,
             )
+            waypoint.ruleText()?.let {
+                Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
+            }
             if (emphasized) {
                 waypoint.platform?.let {
                     Text(

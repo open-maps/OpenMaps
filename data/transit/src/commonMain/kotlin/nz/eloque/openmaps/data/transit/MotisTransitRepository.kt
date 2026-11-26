@@ -10,6 +10,7 @@ import nz.eloque.openmaps.core.model.DeparturesResult
 import nz.eloque.openmaps.core.model.GeoBounds
 import nz.eloque.openmaps.core.model.Itinerary
 import nz.eloque.openmaps.core.model.LatLng
+import nz.eloque.openmaps.core.model.Line
 import nz.eloque.openmaps.core.model.ModeGroup
 import nz.eloque.openmaps.core.model.PlanRequest
 import nz.eloque.openmaps.core.model.PlanResult
@@ -58,6 +59,8 @@ internal class MotisTransitRepository(
                         parameter("maxDirectTime", MAX_DIRECT_SECONDS)
                     }
                     request.pageCursor?.let { parameter("pageCursor", it) }
+                    parameter("joinInterlinedLegs", false)
+                    if (request.withTransit) parameter("numLegAlternatives", LEG_ALTERNATIVES)
                     routeOptions(request.options, request.withTransit)
                 }.body()
         return PlanResult(
@@ -69,14 +72,23 @@ internal class MotisTransitRepository(
     }
 
     override suspend fun trip(tripId: String): Itinerary {
-        val response: ItineraryDto = client.get("${baseUrl()}/v6/trip") { parameter("tripId", tripId) }.body()
+        val response: ItineraryDto =
+            client
+                .get("${baseUrl()}/v6/trip") {
+                    parameter("tripId", tripId)
+                    parameter("joinInterlinedLegs", false)
+                }.body()
         return response.toItinerary()
     }
 
     override suspend fun itinerary(id: String): Itinerary? =
         try {
             client
-                .get("${baseUrl()}/v6/refresh-itinerary") { parameter("itineraryId", id) }
+                .get("${baseUrl()}/v6/refresh-itinerary") {
+                    parameter("itineraryId", id)
+                    parameter("joinInterlinedLegs", false)
+                    parameter("numLegAlternatives", LEG_ALTERNATIVES)
+                }
                 .body<ItineraryDto>()
                 .toItinerary()
                 .copy(id = id)
@@ -97,6 +109,28 @@ internal class MotisTransitRepository(
             parameter("n", count)
             pageCursor?.let { parameter("pageCursor", it) }
         }
+
+    override suspend fun lines(stopId: String): List<Line> =
+        client
+            .get("${baseUrl()}/v6/stop") { parameter("stopId", stopId) }
+            .body<StopInfoDto>()
+            .routes
+            .map { it.toLine() }
+            .filter { it.isLine() }
+            .distinctBy { it.label to it.mode }
+            .sortedWith(
+                compareBy<Line> {
+                    LineOrder.indexOf(it.mode).let { i ->
+                        if (i <
+                            0
+                        ) {
+                            LineOrder.size
+                        } else {
+                            i
+                        }
+                    }
+                }.thenBy(NaturalOrder) { it.label },
+            )
 
     override suspend fun departuresNear(
         location: LatLng,
@@ -144,6 +178,7 @@ private fun HttpRequestBuilder.routeOptions(
     }
     if (options.wheelchair) parameter("pedestrianProfile", "WHEELCHAIR")
     if (options.bikeOnBoard && withTransit) parameter("requireBikeTransport", true)
+    if (options.avoidReservations && withTransit) parameter("noCompulsoryReservation", true)
     if (options.sharedVehicles && withTransit) {
         val factors = SharedAccessKinds.flatMap(::formFactors).joinToString(",")
         parameter("preTransitModes", "WALK,RENTAL")
@@ -163,6 +198,9 @@ private fun motisMode(mode: TransportMode): String =
 private val MINOR_MODES = listOf("FUNICULAR", "AERIAL_LIFT", "OTHER")
 private const val SLOW_WALK_METERS_PER_SECOND = 0.9
 
+/** Other runs offered per ride, kept small as each costs the server a search. */
+private const val LEG_ALTERNATIVES = 3
+
 /** Shared vehicles that can take the user to and from public transport. Cars are left out, as most must go back to their station. */
 private val SharedAccessKinds = listOf(VehicleKind.BICYCLE, VehicleKind.SCOOTER)
 
@@ -175,3 +213,27 @@ private const val FAST_WALK_METERS_PER_SECOND = 1.6
 
 /** MOTIS misreads timestamps with more than millisecond precision, so times are sent in whole seconds. */
 internal fun Instant.asParameter(): String = Instant.fromEpochSeconds(epochSeconds).toString()
+
+/** Orders labels like a station sign, so `S2` comes before `S11` and plain numbers before names. */
+private val NaturalOrder: Comparator<String> =
+    compareBy<String>({ it.takeWhile { c -> !c.isDigit() } }, { it.filter(Char::isDigit).toIntOrNull() ?: Int.MAX_VALUE }, { it })
+
+// Feeds list long-distance and night trains as one route per train, often under internal numbers, so only lines are kept.
+private fun Line.isLine(): Boolean =
+    mode !in setOf(TransportMode.HIGHSPEED_RAIL, TransportMode.LONG_DISTANCE_RAIL, TransportMode.NIGHT_RAIL) &&
+        label.isNotBlank() &&
+        !TrainNumber.matches(label)
+
+/** A single train such as `EN 40237`, rather than a line. */
+private val TrainNumber = Regex(".*\\s\\d{3,}")
+
+private val LineOrder =
+    listOf(
+        TransportMode.SUBURBAN,
+        TransportMode.REGIONAL_RAIL,
+        TransportMode.SUBWAY,
+        TransportMode.TRAM,
+        TransportMode.BUS,
+        TransportMode.COACH,
+        TransportMode.FERRY,
+    )

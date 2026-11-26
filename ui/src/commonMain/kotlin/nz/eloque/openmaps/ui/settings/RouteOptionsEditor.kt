@@ -47,6 +47,8 @@ import nz.eloque.openmaps.ui.resources.mode_ferry
 import nz.eloque.openmaps.ui.resources.mode_long_distance
 import nz.eloque.openmaps.ui.resources.mode_regional
 import nz.eloque.openmaps.ui.resources.mode_subway_tram
+import nz.eloque.openmaps.ui.resources.options_avoid_reservations
+import nz.eloque.openmaps.ui.resources.options_avoid_reservations_detail
 import nz.eloque.openmaps.ui.resources.options_bike
 import nz.eloque.openmaps.ui.resources.options_bike_on_board
 import nz.eloque.openmaps.ui.resources.options_bike_on_board_detail
@@ -194,6 +196,12 @@ private fun TransitOptions(
             subtitle = stringResource(Res.string.options_bike_on_board_detail),
             checked = options.bikeOnBoard,
             onCheckedChange = { onChange(options.copy(bikeOnBoard = it)) },
+        )
+        SettingsSwitch(
+            title = stringResource(Res.string.options_avoid_reservations),
+            subtitle = stringResource(Res.string.options_avoid_reservations_detail),
+            checked = options.avoidReservations,
+            onCheckedChange = { onChange(options.copy(avoidReservations = it)) },
         )
     }
 }

@@ -1,7 +1,9 @@
 package nz.eloque.openmaps.ui.stop
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -22,14 +24,17 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import nz.eloque.openmaps.core.model.Line
 import nz.eloque.openmaps.core.model.ModeGroup
 import nz.eloque.openmaps.map.MapController
 import nz.eloque.openmaps.ui.components.DepartureGroupRow
 import nz.eloque.openmaps.ui.components.DirectionsButton
 import nz.eloque.openmaps.ui.components.FocusOnMap
+import nz.eloque.openmaps.ui.components.LineChip
 import nz.eloque.openmaps.ui.components.LoadState
 import nz.eloque.openmaps.ui.components.LoadStateContent
 import nz.eloque.openmaps.ui.components.SaveButton
@@ -43,6 +48,7 @@ import nz.eloque.openmaps.ui.resources.board_now
 import nz.eloque.openmaps.ui.resources.departures
 import nz.eloque.openmaps.ui.resources.later
 import nz.eloque.openmaps.ui.resources.no_departures
+import nz.eloque.openmaps.ui.resources.show_less
 import nz.eloque.openmaps.ui.settings.label
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
@@ -60,6 +66,7 @@ fun StopSheet(
     val departures by viewModel.departures.collectAsStateWithLifecycle()
     val now by rememberNow()
     val from by viewModel.from.collectAsStateWithLifecycle()
+    val lines by viewModel.lines.collectAsStateWithLifecycle()
     var hidden by rememberSaveable { mutableStateOf(emptySet<ModeGroup>()) }
     val loaded = (departures as? LoadState.Loaded)?.value.orEmpty()
     val available = ModeGroup.entries.filter { group -> loaded.any { it.line.mode in group.modes } }
@@ -68,6 +75,7 @@ fun StopSheet(
     LazyColumn(Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
         item {
             Text(stop.name, style = MaterialTheme.typography.headlineSmall)
+            if (lines.isNotEmpty()) StopLines(lines, Modifier.padding(top = 6.dp))
             Row(Modifier.padding(vertical = 8.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 DirectionsButton(onDirections)
                 SaveButton(stop.toSearchResult())
@@ -145,3 +153,31 @@ private fun BoardControls(
         }
     }
 }
+
+/** The lines serving the stop, the first few at once and the rest after a tap. */
+@Composable
+private fun StopLines(
+    lines: List<Line>,
+    modifier: Modifier = Modifier,
+) {
+    var all by rememberSaveable { mutableStateOf(false) }
+    val shown = if (all) lines else lines.take(SHOWN_LINES)
+    FlowRow(
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+        verticalArrangement = Arrangement.spacedBy(6.dp),
+        itemVerticalAlignment = Alignment.CenterVertically,
+        modifier = modifier,
+    ) {
+        shown.forEach { LineChip(it, minWidth = 0.dp) }
+        if (lines.size > SHOWN_LINES) {
+            Text(
+                if (all) stringResource(Res.string.show_less) else "+${lines.size - SHOWN_LINES}",
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.clickable { all = !all }.padding(horizontal = 6.dp, vertical = 2.dp),
+            )
+        }
+    }
+}
+
+private const val SHOWN_LINES = 12

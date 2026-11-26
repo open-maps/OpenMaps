@@ -40,6 +40,8 @@ internal data class PlaceDto(
     val scheduledDeparture: String? = null,
     val track: String? = null,
     val cancelled: Boolean = false,
+    val pickupType: String? = null,
+    val dropoffType: String? = null,
     val alerts: List<AlertDto> = emptyList(),
     val modes: List<String> = emptyList(),
 )
@@ -48,6 +50,37 @@ internal data class PlaceDto(
 internal data class AlertDto(
     val headerText: String = "",
     val descriptionText: String? = null,
+    val effect: String? = null,
+    val severityLevel: String? = null,
+    val impactPeriod: List<TimeRangeDto> = emptyList(),
+    val url: String? = null,
+)
+
+@Serializable
+internal data class TimeRangeDto(
+    val start: String? = null,
+    val end: String? = null,
+)
+
+@Serializable
+internal data class TicketUrlsDto(
+    val web: String? = null,
+    val android: String? = null,
+)
+
+@Serializable
+internal data class RouteDto(
+    val mode: String,
+    val routeShortName: String? = null,
+    val routeLongName: String? = null,
+    val routeColor: String? = null,
+    val routeTextColor: String? = null,
+    val agencyName: String? = null,
+)
+
+@Serializable
+internal data class StopInfoDto(
+    val routes: List<RouteDto> = emptyList(),
 )
 
 @Serializable
@@ -75,13 +108,19 @@ internal data class LegDto(
     val routeColor: String? = null,
     val routeTextColor: String? = null,
     val agencyName: String? = null,
+    val agencyFareUrl: String? = null,
     val tripId: String? = null,
+    val tripShortName: String? = null,
     val intermediateStops: List<PlaceDto> = emptyList(),
     val alerts: List<AlertDto> = emptyList(),
     val cancelled: Boolean = false,
     val wheelchairAccessible: String? = null,
     val steps: List<StepDto> = emptyList(),
     val rental: RentalDto? = null,
+    val interlineWithPreviousLeg: Boolean = false,
+    val reservation: String? = null,
+    val ticketUrls: TicketUrlsDto? = null,
+    val alternatives: List<List<LegDto>> = emptyList(),
 )
 
 @Serializable
@@ -134,6 +173,7 @@ internal data class StopTimeDto(
     val tripId: String? = null,
     val cancelled: Boolean = false,
     val tripCancelled: Boolean = false,
+    val pickupDropoffType: String? = null,
 )
 
 @Serializable

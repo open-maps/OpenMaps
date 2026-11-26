@@ -52,6 +52,7 @@ import nz.eloque.openmaps.ui.resources.has_alerts
 import nz.eloque.openmaps.ui.resources.minutes
 import nz.eloque.openmaps.ui.resources.now
 import nz.eloque.openmaps.ui.resources.platform
+import nz.eloque.openmaps.ui.resources.stop_exit_only
 import nz.eloque.openmaps.ui.resources.weekday_fri
 import nz.eloque.openmaps.ui.resources.weekday_mon
 import nz.eloque.openmaps.ui.resources.weekday_sat
@@ -148,14 +149,7 @@ fun DepartureGroupRow(
     ) {
         DepartureGroupSummary(group, now, hasAlerts = alerts.isNotEmpty(), onToggleAlerts = { showAlerts = !showAlerts })
         if (showAlerts) {
-            alerts.forEach { alert ->
-                Text(
-                    alert.header,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(start = 84.dp, bottom = 6.dp),
-                )
-            }
+            alerts.forEach { alert -> AlertNote(alert, Modifier.padding(bottom = 6.dp)) }
         }
     }
 }
@@ -191,9 +185,15 @@ private fun DepartureGroupSummary(
                     )
                 }
             }
-            group.departures.first().platform?.let {
+            val first = group.departures.first()
+            val notes =
+                listOfNotNull(
+                    first.platform?.let { stringResource(Res.string.platform, it) },
+                    stringResource(Res.string.stop_exit_only).takeUnless { first.canBoard },
+                )
+            if (notes.isNotEmpty()) {
                 Text(
-                    stringResource(Res.string.platform, it),
+                    notes.joinToString(" · "),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )

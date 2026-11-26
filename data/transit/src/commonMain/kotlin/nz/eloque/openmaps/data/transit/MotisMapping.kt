@@ -1,6 +1,9 @@
 package nz.eloque.openmaps.data.transit
 
 import nz.eloque.openmaps.core.model.Alert
+import nz.eloque.openmaps.core.model.AlertEffect
+import nz.eloque.openmaps.core.model.AlertSeverity
+import nz.eloque.openmaps.core.model.Continuation
 import nz.eloque.openmaps.core.model.Departure
 import nz.eloque.openmaps.core.model.EventTime
 import nz.eloque.openmaps.core.model.Itinerary
@@ -55,8 +58,36 @@ private fun firstTranslation(text: String): String = text.substringBefore(" -|")
 internal fun AlertDto.toAlert(): Alert? {
     val header = firstTranslation(headerText).ifBlank { return null }
     val description = descriptionText?.let(::firstTranslation)?.takeIf { it.isNotBlank() && it != header }
-    return Alert(header, description)
+    val period = impactPeriod.firstOrNull()
+    return Alert(
+        header = header,
+        description = description,
+        effect =
+            when (effect) {
+                "NO_SERVICE" -> AlertEffect.NO_SERVICE
+                "REDUCED_SERVICE" -> AlertEffect.REDUCED_SERVICE
+                "SIGNIFICANT_DELAYS" -> AlertEffect.DELAYS
+                "DETOUR" -> AlertEffect.DETOUR
+                "STOP_MOVED" -> AlertEffect.STOP_MOVED
+                "ACCESSIBILITY_ISSUE" -> AlertEffect.ACCESSIBILITY
+                "MODIFIED_SERVICE" -> AlertEffect.MODIFIED_SERVICE
+                "ADDITIONAL_SERVICE" -> AlertEffect.ADDITIONAL_SERVICE
+                else -> AlertEffect.OTHER
+            },
+        severity =
+            when (severityLevel) {
+                "INFO" -> AlertSeverity.INFO
+                "WARNING" -> AlertSeverity.WARNING
+                "SEVERE" -> AlertSeverity.SEVERE
+                else -> null
+            },
+        start = period?.start?.let(::parseInstant),
+        end = period?.end?.let(::parseInstant),
+        url = url?.takeIf { it.startsWith("https://") || it.startsWith("http://") },
+    )
 }
+
+private fun parseInstant(text: String): Instant? = runCatching { Instant.parse(text) }.getOrNull()
 
 private fun eventTime(
     scheduled: String?,
@@ -78,8 +109,13 @@ internal fun PlaceDto.toWaypoint(realTime: Boolean): Waypoint =
         departure = eventTime(scheduledDeparture, departure, realTime),
         isCancelled = cancelled,
         timeZone = tz,
+        canBoard = pickupType != NOT_ALLOWED,
+        canAlight = dropoffType != NOT_ALLOWED,
     )
 
+private const val NOT_ALLOWED = "NOT_ALLOWED"
+
+// The display name carries what passengers see, such as `ICE 102`, where the route's short name is often an internal number.
 private fun line(
     mode: String,
     shortName: String?,
@@ -89,7 +125,7 @@ private fun line(
     textColor: String?,
     agency: String?,
 ) = Line(
-    shortName = shortName?.takeIf { it.isNotBlank() } ?: displayName?.takeIf { it.isNotBlank() },
+    shortName = displayName?.takeIf { it.isNotBlank() } ?: shortName?.takeIf { it.isNotBlank() },
     longName = longName?.takeIf { it.isNotBlank() },
     mode = transportMode(mode),
     color = parseColor(color),
@@ -116,35 +152,92 @@ internal fun LegDto.toLeg(): Leg {
             sharedRental,
         )
     }
-    return Leg.Transit(
-        from = from.toWaypoint(realTime),
-        to = to.toWaypoint(realTime),
-        start = start,
-        end = end,
-        geometry = geometry,
-        line = line(this.mode, routeShortName, displayName, routeLongName, routeColor, routeTextColor, agencyName),
-        headsign = headsign,
-        tripId = tripId,
-        intermediateStops = intermediateStops.map { it.toWaypoint(realTime) },
-        alerts = alerts.mapNotNull { it.toAlert() },
-        isCancelled = cancelled,
-        isWheelchairAccessible =
-            when (wheelchairAccessible) {
-                "ACCESSIBLE" -> true
-                "NOT_ACCESSIBLE" -> false
-                else -> null
-            },
+    val line = line(this.mode, routeShortName, displayName, routeLongName, routeColor, routeTextColor, agencyName)
+    val transit =
+        Leg.Transit(
+            from = from.toWaypoint(realTime),
+            to = to.toWaypoint(realTime),
+            start = start,
+            end = end,
+            geometry = geometry,
+            line = line,
+            headsign = headsign,
+            tripId = tripId,
+            intermediateStops = intermediateStops.map { it.toWaypoint(realTime) },
+            alerts = alerts.mapNotNull { it.toAlert() },
+            isCancelled = cancelled,
+            isWheelchairAccessible =
+                when (wheelchairAccessible) {
+                    "ACCESSIBLE" -> true
+                    "NOT_ACCESSIBLE" -> false
+                    else -> null
+                },
+            tripName = tripName(tripShortName, line.label),
+            reservationRequired = reservation == "COMPULSORY",
+            ticketUrl = listOfNotNull(ticketUrls?.android, ticketUrls?.web, agencyFareUrl).firstOrNull { it.startsWith("https://") },
+        )
+    return transit.copy(
+        alternatives =
+            alternatives
+                .mapNotNull { alternative -> alternative.toLegs().filterIsInstance<Leg.Transit>().firstOrNull() }
+                .filter { it.tripId != tripId && !it.isSameTrainAs(transit) }
+                .sortedBy { it.start.actual },
     )
 }
 
-internal fun ItineraryDto.toItinerary(): Itinerary =
-    Itinerary(
-        id = id.ifBlank { "$startTime/$endTime/${legs.joinToString(",") { it.mode + it.from.name }}" },
+/** The run's own number where the line name does not already show it, without leading zeros. */
+internal fun tripName(
+    tripShortName: String?,
+    label: String,
+): String? {
+    val name = tripShortName?.trim()?.trimStart('0')?.takeIf { it.isNotEmpty() } ?: return null
+    return name.takeIf { it !in label }
+}
+
+/** Legs with every stay-seated chain joined into one ride. */
+internal fun List<LegDto>.toLegs(): List<Leg> =
+    fold(mutableListOf()) { legs, dto ->
+        val leg = dto.toLeg()
+        val previous = legs.lastOrNull()
+        if (dto.interlineWithPreviousLeg && previous is Leg.Transit && leg is Leg.Transit) {
+            legs[legs.lastIndex] = previous.continuedBy(leg)
+        } else {
+            legs += leg
+        }
+        legs
+    }
+
+/** This ride and [next], which the same vehicle carries on as, as one ride. */
+internal fun Leg.Transit.continuedBy(next: Leg.Transit): Leg.Transit =
+    copy(
+        to = next.to,
+        end = next.end,
+        geometry = geometry + next.geometry,
+        intermediateStops =
+            intermediateStops + to.copy(departure = next.from.departure, platform = next.from.platform) + next.intermediateStops,
+        alerts = (alerts + next.alerts).distinct(),
+        isCancelled = isCancelled || next.isCancelled,
+        isWheelchairAccessible =
+            when {
+                isWheelchairAccessible == false || next.isWheelchairAccessible == false -> false
+                isWheelchairAccessible == true && next.isWheelchairAccessible == true -> true
+                else -> null
+            },
+        continuations = continuations + Continuation(to.name, next.line, next.headsign) + next.continuations,
+        reservationRequired = reservationRequired || next.reservationRequired,
+        ticketUrl = ticketUrl ?: next.ticketUrl,
+    )
+
+internal fun ItineraryDto.toItinerary(): Itinerary {
+    val legs = legs.toLegs()
+    return Itinerary(
+        id = id.ifBlank { "$startTime/$endTime/${this.legs.joinToString(",") { it.mode + it.from.name }}" },
         start = Instant.parse(startTime),
         end = Instant.parse(endTime),
-        transfers = transfers.toInt(),
-        legs = legs.map { it.toLeg() },
+        transfers = (legs.count { it is Leg.Transit } - 1).coerceAtLeast(0),
+        legs = legs,
     )
+}
 
 internal fun StopTimeDto.toDeparture(): Departure? {
     val time = eventTime(place.scheduledDeparture, place.departure, realTime) ?: return null
@@ -159,8 +252,11 @@ internal fun StopTimeDto.toDeparture(): Departure? {
         tripId = tripId,
         isCancelled = cancelled || tripCancelled,
         alerts = place.alerts.mapNotNull { it.toAlert() },
+        canBoard = pickupDropoffType != NOT_ALLOWED,
     )
 }
+
+internal fun RouteDto.toLine(): Line = line(mode, routeShortName, null, routeLongName, routeColor, routeTextColor, agencyName)
 
 internal fun MatchDto.toSearchResult(): SearchResult {
     val location = LatLng(lat, lon)
@@ -206,3 +302,9 @@ private val IconSizeSuffix = Regex("_\\d+$")
 
 /** Geocoded places carry their OpenStreetMap object as `way/123`. */
 private val OsmObject = Regex("(node|way|relation)/\\d+")
+
+/** Long-distance trains carry their number in the line name, so one listed again with that name is the same train from another feed. */
+private fun Leg.Transit.isSameTrainAs(other: Leg.Transit): Boolean =
+    line.mode in NumberedTrains && other.line.mode in NumberedTrains && line.label == other.line.label
+
+private val NumberedTrains = setOf(TransportMode.HIGHSPEED_RAIL, TransportMode.LONG_DISTANCE_RAIL, TransportMode.NIGHT_RAIL)

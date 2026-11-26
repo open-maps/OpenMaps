@@ -159,6 +159,7 @@ class MotisClientTest {
                             walkingSpeed = WalkingSpeed.SLOW,
                             wheelchair = true,
                             bikeOnBoard = true,
+                            avoidReservations = true,
                         ),
                 ),
             )
@@ -168,12 +169,16 @@ class MotisClientTest {
             assertEquals(null, defaults["maxTransfers"])
             assertEquals(null, defaults["pedestrianProfile"])
             assertEquals(null, defaults["requireBikeTransport"])
+            assertEquals(null, defaults["noCompulsoryReservation"])
+            assertEquals("false", defaults["joinInterlinedLegs"])
+            assertEquals("3", defaults["numLegAlternatives"])
             val custom = requests[1].parameters
             assertEquals("HIGHSPEED_RAIL,LONG_DISTANCE,NIGHT_RAIL,BUS,COACH,FUNICULAR,AERIAL_LIFT,OTHER", custom["transitModes"])
             assertEquals("0", custom["maxTransfers"])
             assertEquals("0.9", custom["pedestrianSpeed"])
             assertEquals("WHEELCHAIR", custom["pedestrianProfile"])
             assertEquals("true", custom["requireBikeTransport"])
+            assertEquals("true", custom["noCompulsoryReservation"])
             assertEquals(null, custom["useRoutedTransfers"], "Transitous finds almost no wheelchair routes with routed transfers")
         }
 
@@ -234,4 +239,18 @@ class MotisClientTest {
     fun unknownModeFallsBackToOther() {
         assertEquals(TransportMode.OTHER, transportMode("HOVERCRAFT"))
     }
+
+    @Test
+    fun linesAtAStopLeaveOutSingleTrainsAndPutRailFirst() =
+        runTest {
+            val body =
+                """{"routes":[
+                {"mode":"BUS","routeShortName":"S5E"},{"mode":"BUS","routeShortName":"S5E","agencyName":"Other"},
+                {"mode":"HIGHSPEED_RAIL","routeShortName":"11"},{"mode":"REGIONAL_RAIL","routeShortName":"EN 40237"},
+                {"mode":"SUBURBAN","routeShortName":"S11"},{"mode":"SUBURBAN","routeShortName":"S2"},
+                {"mode":"TRAM","routeShortName":""},{"mode":"BUS","routeShortName":"40"}]}"""
+            val repository = MotisTransitRepository(client(body), { TRANSITOUS_API })
+            assertEquals(listOf("S2", "S11", "40", "S5E"), repository.lines("stop").map { it.label })
+            assertEquals("stop", requests.single().parameters["stopId"])
+        }
 }
