@@ -71,6 +71,14 @@ internal class PreferencesSettingsStore(
         _speedingAlert.value = enabled
     }
 
+    private val _mapCacheMegabytes = MutableStateFlow(settings.getInt(MAP_CACHE_MEGABYTES, DEFAULT_MAP_CACHE_MEGABYTES))
+    override val mapCacheMegabytes: StateFlow<Int> = _mapCacheMegabytes.asStateFlow()
+
+    override fun setMapCacheMegabytes(megabytes: Int) {
+        settings.putInt(MAP_CACHE_MEGABYTES, megabytes)
+        _mapCacheMegabytes.value = megabytes
+    }
+
     private val _preferredFuel = MutableStateFlow(Fuel.entries.firstOrNull { it.name == settings.getStringOrNull(PREFERRED_FUEL) })
     override val preferredFuel: StateFlow<Fuel?> = _preferredFuel.asStateFlow()
 
@@ -202,6 +210,8 @@ internal class PreferencesSettingsStore(
         const val TRAVEL_MODE = "route.travelMode"
         const val DISTANCE_UNIT = "units.distance"
         const val SPEEDING_ALERT = "navigation.speeding_alert"
+        const val MAP_CACHE_MEGABYTES = "map.cache_megabytes"
+        const val DEFAULT_MAP_CACHE_MEGABYTES = 100
         const val PREFERRED_FUEL = "places.preferred_fuel"
         const val MAP_LAYERS = "map.layers"
         const val RADAR_ARROWS = "map.radar.arrows"

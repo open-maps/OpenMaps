@@ -280,7 +280,8 @@ fun App(
     OpenMapsTheme {
         val backStack = rememberNavBackStack(navConfiguration, HomeKey)
         GuidedTripLifecycle(backStack)
-        val map = rememberMapController(loadStyle = { url -> http.get(url).bodyAsText() })
+        val cacheMegabytes by koinInject<SettingsStore>().mapCacheMegabytes.collectAsStateWithLifecycle()
+        val map = rememberMapController(loadStyle = { url -> http.get(url).bodyAsText() }, cacheMegabytes = cacheMegabytes)
         val snackbar = remember { SnackbarHostState() }
         val sheetState =
             rememberBottomSheetScaffoldState(

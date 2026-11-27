@@ -325,6 +325,10 @@
     <string name="units_imperial">Miles</string>
     <string name="servers">Servers</string>
     <string name="servers_detail">Leave empty to use the public services. Set an address to use your own server.</string>
+    <string name="map_storage">Map storage</string>
+    <string name="map_cache_detail">Maps you have looked at are kept up to this size, so they open faster and work without a connection. Downloaded areas come on top.</string>
+    <string name="map_cache_clear">Clear viewed maps</string>
+    <string name="megabytes">%1$d MB</string>
     <string name="service_server">%1$s (%2$s)</string>
     <string name="service_key">%1$s key</string>
     <string name="service_help">About %1$s</string>

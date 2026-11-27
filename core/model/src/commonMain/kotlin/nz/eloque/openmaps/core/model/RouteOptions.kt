@@ -99,6 +99,11 @@ interface SettingsStore {
 
     fun setSpeedingAlert(enabled: Boolean)
 
+    /** How many megabytes of viewed map tiles are kept for later and for offline use. */
+    val mapCacheMegabytes: StateFlow<Int>
+
+    fun setMapCacheMegabytes(megabytes: Int)
+
     /** The fuel whose price gas station results show, null until the user picks one. */
     val preferredFuel: StateFlow<Fuel?>
 

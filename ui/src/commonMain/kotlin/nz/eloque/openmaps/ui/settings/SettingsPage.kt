@@ -2,6 +2,7 @@ package nz.eloque.openmaps.ui.settings
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -21,9 +22,11 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -34,6 +37,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kotlinx.coroutines.launch
 import nz.eloque.compose_kit.settings.SettingsSwitch
 import nz.eloque.openmaps.core.model.DistanceUnit
 import nz.eloque.openmaps.core.model.ServiceCatalog
@@ -41,10 +45,15 @@ import nz.eloque.openmaps.core.model.ServiceRole
 import nz.eloque.openmaps.core.model.ServiceSetting
 import nz.eloque.openmaps.core.model.ServiceSettingKind
 import nz.eloque.openmaps.core.model.SettingsStore
+import nz.eloque.openmaps.map.clearTileCache
 import nz.eloque.openmaps.ui.components.Page
 import nz.eloque.openmaps.ui.resources.Res
 import nz.eloque.openmaps.ui.resources.api_keys
 import nz.eloque.openmaps.ui.resources.api_keys_detail
+import nz.eloque.openmaps.ui.resources.map_cache_clear
+import nz.eloque.openmaps.ui.resources.map_cache_detail
+import nz.eloque.openmaps.ui.resources.map_storage
+import nz.eloque.openmaps.ui.resources.megabytes
 import nz.eloque.openmaps.ui.resources.role_active_routing
 import nz.eloque.openmaps.ui.resources.role_charging_stations
 import nz.eloque.openmaps.ui.resources.role_flights
@@ -83,6 +92,8 @@ fun SettingsPage(onBack: () -> Unit) =
         val routeOptions by settings.routeOptions.collectAsStateWithLifecycle()
         val distanceUnit by settings.distanceUnit.collectAsStateWithLifecycle()
         val speedingAlert by settings.speedingAlert.collectAsStateWithLifecycle()
+        val cacheMegabytes by settings.mapCacheMegabytes.collectAsStateWithLifecycle()
+        val scope = rememberCoroutineScope()
         val services = koinInject<ServiceCatalog>().settings
 
         Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).navigationBarsPadding()) {
@@ -112,6 +123,28 @@ fun SettingsPage(onBack: () -> Unit) =
                 checked = speedingAlert,
                 onCheckedChange = settings::setSpeedingAlert,
             )
+            HorizontalDivider(Modifier.padding(vertical = 8.dp))
+
+            SectionTitle(Res.string.map_storage)
+            Text(
+                stringResource(Res.string.map_cache_detail),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(horizontal = 16.dp),
+            )
+            FlowRow(Modifier.padding(horizontal = 16.dp, vertical = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                CacheSizes.forEach { megabytes ->
+                    FilterChip(
+                        selected = cacheMegabytes == megabytes,
+                        onClick = { settings.setMapCacheMegabytes(megabytes) },
+                        label = { Text(stringResource(Res.string.megabytes, megabytes)) },
+                    )
+                }
+            }
+            TextButton(
+                onClick = { scope.launch { clearTileCache() } },
+                modifier = Modifier.padding(horizontal = 8.dp),
+            ) { Text(stringResource(Res.string.map_cache_clear)) }
             HorizontalDivider(Modifier.padding(vertical = 8.dp))
 
             SectionTitle(Res.string.servers)
@@ -217,3 +250,4 @@ private val ServiceRole.label: StringResource
             ServiceRole.FLIGHTS -> Res.string.role_flights
             ServiceRole.WEATHER_FORECAST -> Res.string.role_weather_forecast
         }
+private val CacheSizes = listOf(50, 100, 250, 500, 1000)

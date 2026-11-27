@@ -365,11 +365,14 @@ class MapController internal constructor(
 @UiComposable
 fun rememberMapController(
     loadStyle: suspend (String) -> String,
+    /** Megabytes of viewed tiles kept on the device. */
+    cacheMegabytes: Int,
     dark: Boolean = isSystemInDarkTheme(),
 ): MapController {
     val darkBase by produceState<BaseStyle?>(null, dark) {
         if (dark) darkStyles { loadStyle(LIGHT_STYLE) }.collect { value = it }
     }
+    LaunchedEffect(cacheMegabytes) { setTileCacheSize(cacheMegabytes) }
     val location = rememberLocationState()
     val markerColor = MaterialTheme.colorScheme.primary
     val casingColor = if (dark) Color.Black else Color.White
