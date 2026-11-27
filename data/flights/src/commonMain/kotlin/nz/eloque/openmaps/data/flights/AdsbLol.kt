@@ -61,6 +61,8 @@ internal class AdsbLol(
 
     suspend fun byAddress(id: String): Aircraft? = fetch("v2/hex/${id.encodeURLPathPart()}").firstOrNull()
 
+    suspend fun byCallsign(callsign: String): List<Aircraft> = fetch("v2/callsign/${callsign.encodeURLPathPart()}")
+
     private suspend fun fetch(path: String): List<Aircraft> {
         val base = baseUrl.first()?.takeIf { it.isNotBlank() }?.trimEnd('/') ?: return emptyList()
         val list =

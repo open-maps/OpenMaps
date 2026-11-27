@@ -61,6 +61,14 @@ internal class FlightSources(
 
     override suspend fun aircraft(id: String): Aircraft? = positions.byAddress(id)
 
+    override suspend fun flight(number: String): List<Aircraft> {
+        val wanted = number.uppercase().filterNot { it.isWhitespace() }
+        if (AirlineCallsign.matches(wanted)) return positions.byCallsign(wanted)
+        val (airline, digits, suffix) = IataFlight.matchEntire(wanted)?.destructured ?: return emptyList()
+        val callsigns = data.airlinesWithIata(airline).take(MAX_AIRLINES).map { it + digits.trimStart('0') + suffix }
+        return callsigns.flatMap { positions.byCallsign(it) }.distinctBy { it.id }
+    }
+
     override suspend fun info(aircraft: Aircraft): FlightInfo {
         val callsign = aircraft.callsign?.takeIf { AirlineCallsign.matches(it) }
         val stops = callsign?.let { data.route(it) }?.mapNotNull { data.airport(it) }.orEmpty()
@@ -76,6 +84,12 @@ internal class FlightSources(
 
 /** An airline's ICAO code followed by a flight number, unlike the registrations private flights use. */
 private val AirlineCallsign = Regex("[A-Z]{3}[0-9][0-9A-Z]*")
+
+/** An IATA airline code, which has at least one letter, then the flight number. */
+private val IataFlight = Regex("((?=[A-Z]|[0-9][A-Z])[A-Z0-9]{2})([0-9]{1,4})([A-Z]?)")
+
+// Several airlines, mostly defunct, can share an IATA code. Each costs one request.
+private const val MAX_AIRLINES = 3
 
 private fun detour(
     from: LatLng,

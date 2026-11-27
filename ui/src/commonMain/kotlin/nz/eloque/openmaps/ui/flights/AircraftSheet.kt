@@ -221,7 +221,7 @@ private fun ShowFlightOnMap(
     DisposableEffect(map) { onDispose { if (map.lines === drawn[0]) map.lines = emptyList() } }
 }
 
-private val Airport.label: String
+internal val Airport.label: String
     get() = listOfNotNull(iata ?: icao, city ?: name).joinToString(" ")
 
 private const val LEVEL_RATE = 1.0

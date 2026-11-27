@@ -69,6 +69,17 @@ class FlightSourcesTest {
         FlightSources(AdsbLol(client, flowOf("https://adsb.example/")), StandingData(client, flowOf("https://data.example")))
 
     @Test
+    fun flightNumbersAreLookedUpByTheAirlinesCallsign() =
+        runTest {
+            sources.flight("lh 0400")
+            sources.flight("DLH400")
+            sources.flight("123A")
+            sources.flight("Q9 12")
+
+            assertEquals(listOf("/v2/callsign/DLH400", "/v2/callsign/DLH400"), requests.filter { it.startsWith("/v2/") })
+        }
+
+    @Test
     fun aircraftComeInMetricUnitsWithTheAgeOfTheirPosition() =
         runTest {
             val aircraft = sources.near(LatLng(49.0, 8.4), 100_000.0)

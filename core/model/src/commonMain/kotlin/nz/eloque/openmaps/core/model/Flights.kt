@@ -76,6 +76,9 @@ interface AirTraffic {
     /** The aircraft with address [id], or null when it is not being received. */
     suspend fun aircraft(id: String): Aircraft?
 
+    /** Aircraft flying as [number], an airline flight number such as `LH400` or a callsign such as `DLH400`. */
+    suspend fun flight(number: String): List<Aircraft>
+
     suspend fun info(aircraft: Aircraft): FlightInfo
 }
 

@@ -2,6 +2,7 @@ package nz.eloque.openmaps.ui.search
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -14,7 +15,10 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import nz.eloque.openmaps.core.model.AirTraffic
+import nz.eloque.openmaps.core.model.Aircraft
 import nz.eloque.openmaps.core.model.Favourite
+import nz.eloque.openmaps.core.model.FlightInfo
 import nz.eloque.openmaps.core.model.Geocoder
 import nz.eloque.openmaps.core.model.LatLng
 import nz.eloque.openmaps.core.model.PlacesStore
@@ -37,12 +41,16 @@ class SearchViewModel(
     private val geocoder: Geocoder,
     private val places: PlacesStore,
     private val contacts: Contacts,
+    private val traffic: AirTraffic,
 ) : ViewModel() {
     private val _query = MutableStateFlow("")
     val query: StateFlow<String> = _query.asStateFlow()
 
     var near: LatLng? = null
     var stopsFirst: Boolean = false
+
+    /** Whether queries that look like flight numbers also look for aircraft in the air. */
+    var findsFlights: Boolean = false
 
     /** Shown before typing. Recents that are also favourites are left out. */
     val suggestions: StateFlow<Suggestions> =
@@ -72,6 +80,27 @@ class SearchViewModel(
                 }
             }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
+    /** Aircraft flying as the flight number typed, empty for other queries. */
+    val flights: StateFlow<List<FlightResult>> =
+        _query
+            .debounce(DEBOUNCE_MILLIS)
+            .flatMapLatest { query ->
+                flow {
+                    emit(emptyList())
+                    val trimmed = query.trim()
+                    if (!findsFlights || !FlightLike.matches(trimmed)) return@flow
+                    val found =
+                        try {
+                            traffic.flight(trimmed).take(MAX_FLIGHTS).map { FlightResult(it, traffic.info(it)) }
+                        } catch (e: CancellationException) {
+                            throw e
+                        } catch (_: Exception) {
+                            emptyList()
+                        }
+                    emit(found)
+                }
+            }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
     fun setQuery(value: String) {
         _query.value = value
     }
@@ -88,6 +117,7 @@ class SearchViewModel(
     private companion object {
         const val DEBOUNCE_MILLIS = 300L
         const val MIN_QUERY_LENGTH = 2
+        const val MAX_FLIGHTS = 3
     }
 }
 
@@ -96,3 +126,10 @@ const val COORDINATES_CATEGORY = "coordinates"
 
 private fun LatLng.toSearchResult() =
     SearchResult.Place(id = null, name = formatted(), location = this, area = plusCode(), category = COORDINATES_CATEGORY)
+
+data class FlightResult(
+    val aircraft: Aircraft,
+    val info: FlightInfo,
+)
+
+private val FlightLike = Regex("[A-Za-z0-9]{2,3} ?[0-9]{1,4}[A-Za-z]{0,2}")

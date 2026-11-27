@@ -47,6 +47,10 @@ internal class StandingData(
         return table("airlines/schema-01/airlines.csv", key = "ICAO")[code]?.get("Name")?.takeIf { it.isNotBlank() }
     }
 
+    /** ICAO codes of the airlines using IATA code [iata]. */
+    suspend fun airlinesWithIata(iata: String): List<String> =
+        table("airlines/schema-01/airlines.csv", key = "ICAO").filterValues { it["IATA"] == iata }.keys.toList()
+
     suspend fun model(typeCode: String): String? {
         val row = table("model-type/schema-01/${typeCode[0]}.csv")[typeCode] ?: return null
         return listOfNotNull(row["Manufacturer"], row["Model"])

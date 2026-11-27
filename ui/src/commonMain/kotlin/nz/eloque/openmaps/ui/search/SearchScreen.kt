@@ -15,6 +15,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Contacts
+import androidx.compose.material.icons.filled.Flight
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -38,6 +39,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import nz.eloque.compose_kit.dialog.FullscreenDialog
+import nz.eloque.openmaps.core.model.Aircraft
 import nz.eloque.openmaps.core.model.FavouriteLabel
 import nz.eloque.openmaps.core.model.LatLng
 import nz.eloque.openmaps.core.model.PlaceCategory
@@ -47,12 +49,16 @@ import nz.eloque.openmaps.ui.category.icon
 import nz.eloque.openmaps.ui.category.label
 import nz.eloque.openmaps.ui.components.LoadStateContent
 import nz.eloque.openmaps.ui.components.icon
+import nz.eloque.openmaps.ui.flights.label
 import nz.eloque.openmaps.ui.resources.Res
+import nz.eloque.openmaps.ui.resources.aircraft_on_ground
+import nz.eloque.openmaps.ui.resources.aircraft_route
 import nz.eloque.openmaps.ui.resources.back
 import nz.eloque.openmaps.ui.resources.category_nearby
 import nz.eloque.openmaps.ui.resources.clear
 import nz.eloque.openmaps.ui.resources.contact_address
 import nz.eloque.openmaps.ui.resources.favourites
+import nz.eloque.openmaps.ui.resources.flight_in_air
 import nz.eloque.openmaps.ui.resources.home
 import nz.eloque.openmaps.ui.resources.no_results
 import nz.eloque.openmaps.ui.resources.recent
@@ -70,14 +76,17 @@ fun SearchScreen(
     onSelect: (SearchResult) -> Unit,
     onCategory: ((PlaceCategory) -> Unit)? = null,
     initialQuery: String? = null,
+    onFlight: ((Aircraft) -> Unit)? = null,
 ) {
     val viewModel = koinViewModel<SearchViewModel>()
     LaunchedEffect(initialQuery) { initialQuery?.let(viewModel::setQuery) }
     viewModel.near = near
     viewModel.stopsFirst = stopsFirst
+    viewModel.findsFlights = onFlight != null
     val query by viewModel.query.collectAsStateWithLifecycle()
     val results by viewModel.results.collectAsStateWithLifecycle()
     val suggestions by viewModel.suggestions.collectAsStateWithLifecycle()
+    val flights by viewModel.flights.collectAsStateWithLifecycle()
     val focus = remember { FocusRequester() }
     LaunchedEffect(Unit) { focus.requestFocus() }
     val select: (SearchResult) -> Unit = { result ->
@@ -120,6 +129,16 @@ fun SearchScreen(
                             supporting = null,
                             icon = category.icon,
                             onClick = { onCategory(category) },
+                        )
+                    }
+                }
+                if (onFlight != null) {
+                    flights.forEach { flight ->
+                        ResultRow(
+                            headline = listOfNotNull(flight.aircraft.callsign, flight.info.airline).joinToString(" · "),
+                            supporting = flight.summary(),
+                            icon = Icons.Default.Flight,
+                            onClick = { onFlight(flight.aircraft) },
                         )
                     }
                 }
@@ -222,4 +241,15 @@ private fun ResultRow(
         leadingContent = { Icon(icon, contentDescription = null) },
         modifier = Modifier.clickable(onClick = onClick),
     )
+}
+
+@Composable
+private fun FlightResult.summary(): String {
+    val origin = info.origin
+    val destination = info.destination
+    return when {
+        origin != null && destination != null -> stringResource(Res.string.aircraft_route, origin.label, destination.label)
+        aircraft.onGround -> stringResource(Res.string.aircraft_on_ground)
+        else -> stringResource(Res.string.flight_in_air)
+    }
 }

@@ -144,6 +144,7 @@ import nz.eloque.openmaps.ui.category.CategoryChips
 import nz.eloque.openmaps.ui.category.CategoryChipsHeight
 import nz.eloque.openmaps.ui.category.CategorySheet
 import nz.eloque.openmaps.ui.category.label
+import nz.eloque.openmaps.ui.components.FlightTracker
 import nz.eloque.openmaps.ui.components.FlightsOnMap
 import nz.eloque.openmaps.ui.components.StopsOnMap
 import nz.eloque.openmaps.ui.components.VehiclesOnMap
@@ -525,10 +526,21 @@ fun App(
                                                 ListSheet(key.listId, map, onOpenPlace = { backStack.add(it.toKey()) })
                                             }
                                             entry<SearchKey> { search ->
+                                                val flightTracker = koinInject<FlightTracker>()
                                                 SearchScreen(
                                                     near = map.userLocation,
                                                     stopsFirst = search.field != null,
                                                     initialQuery = search.query,
+                                                    onFlight =
+                                                        if (search.field == null && search.saveAs == null) {
+                                                            { aircraft ->
+                                                                flightTracker.put(aircraft)
+                                                                backStack.removeLastOrNull()
+                                                                backStack.add(AircraftKey(aircraft.id, aircraft.callsign))
+                                                            }
+                                                        } else {
+                                                            null
+                                                        },
                                                     onDismiss = { backStack.removeLastOrNull() },
                                                     onCategory =
                                                         if (search.field == null && search.saveAs == null) {

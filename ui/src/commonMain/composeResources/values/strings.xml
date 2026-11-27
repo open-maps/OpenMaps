@@ -452,6 +452,7 @@
     <string name="aircraft_usual_route">Usual route of this flight number</string>
     <string name="aircraft_model">Aircraft: %1$s</string>
     <string name="aircraft_on_ground">On the ground</string>
+    <string name="flight_in_air">In the air</string>
     <string name="aircraft_altitude">Altitude %1$s</string>
     <string name="aircraft_climbing">climbing</string>
     <string name="aircraft_descending">descending</string>
