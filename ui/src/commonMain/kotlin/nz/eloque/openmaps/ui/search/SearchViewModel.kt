@@ -133,3 +133,19 @@ data class FlightResult(
 )
 
 private val FlightLike = Regex("[A-Za-z0-9]{2,3} ?[0-9]{1,4}[A-Za-z]{0,2}")
+
+/** The results last chosen to be shown on the map, handed from the search screen to the results sheet. */
+class LastSearch {
+    var query: String = ""
+        private set
+    var results: List<SearchResult> = emptyList()
+        private set
+
+    fun set(
+        query: String,
+        results: List<SearchResult>,
+    ) {
+        this.query = query
+        this.results = results
+    }
+}

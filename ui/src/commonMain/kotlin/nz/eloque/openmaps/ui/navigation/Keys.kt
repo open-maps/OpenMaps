@@ -140,6 +140,12 @@ data class TripKey(
 @Serializable
 data object SavedKey : NavKey
 
+/** The results of a typed search shown together on the map. */
+@Serializable
+data class SearchResultsKey(
+    val query: String,
+) : NavKey
+
 @Serializable
 data object TripsKey : NavKey
 

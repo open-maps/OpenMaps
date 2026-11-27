@@ -11,6 +11,7 @@ import nz.eloque.openmaps.ui.guidance.NavigationViewModel
 import nz.eloque.openmaps.ui.guidance.TransitGuidanceViewModel
 import nz.eloque.openmaps.ui.guidance.TransitTripGuide
 import nz.eloque.openmaps.ui.place.PlaceViewModel
+import nz.eloque.openmaps.ui.search.LastSearch
 import nz.eloque.openmaps.ui.search.SearchViewModel
 import nz.eloque.openmaps.ui.sharing.SharingViewModel
 import nz.eloque.openmaps.ui.stop.StopViewModel
@@ -28,6 +29,7 @@ val uiModule =
         }
         single { ItineraryCache() }
         single { FlightTracker() }
+        single { LastSearch() }
         single { TrackRecorder(get(), get()) }
         viewModel { params -> DirectionsViewModel(get(), get(), get(), get(), params.get()) }
         single { ActiveTrip() }

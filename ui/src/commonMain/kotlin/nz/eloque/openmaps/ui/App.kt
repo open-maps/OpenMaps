@@ -187,6 +187,7 @@ import nz.eloque.openmaps.ui.navigation.RoadEventKey
 import nz.eloque.openmaps.ui.navigation.RouteKey
 import nz.eloque.openmaps.ui.navigation.SavedKey
 import nz.eloque.openmaps.ui.navigation.SearchKey
+import nz.eloque.openmaps.ui.navigation.SearchResultsKey
 import nz.eloque.openmaps.ui.navigation.SettingsKey
 import nz.eloque.openmaps.ui.navigation.StopKey
 import nz.eloque.openmaps.ui.navigation.TrackKey
@@ -222,6 +223,8 @@ import nz.eloque.openmaps.ui.roads.RoadEventSheet
 import nz.eloque.openmaps.ui.saved.ListSheet
 import nz.eloque.openmaps.ui.saved.SavedSheet
 import nz.eloque.openmaps.ui.search.COORDINATES_CATEGORY
+import nz.eloque.openmaps.ui.search.LastSearch
+import nz.eloque.openmaps.ui.search.SearchResultsSheet
 import nz.eloque.openmaps.ui.search.SearchScreen
 import nz.eloque.openmaps.ui.settings.SettingsPage
 import nz.eloque.openmaps.ui.sharing.SharingSheet
@@ -253,6 +256,7 @@ private val navConfiguration =
                     subclass(OfflineMapsKey::class)
                     subclass(DownloadAreaKey::class)
                     subclass(SearchKey::class)
+                    subclass(SearchResultsKey::class)
                     subclass(PlaceKey::class)
                     subclass(StopKey::class)
                     subclass(DirectionsKey::class)
@@ -537,6 +541,7 @@ fun App(
                                             }
                                             entry<SearchKey> { search ->
                                                 val flightTracker = koinInject<FlightTracker>()
+                                                val lastSearch = koinInject<LastSearch>()
                                                 SearchScreen(
                                                     near = map.userLocation,
                                                     stopsFirst = search.field != null,
@@ -547,6 +552,17 @@ fun App(
                                                                 flightTracker.put(aircraft)
                                                                 backStack.removeLastOrNull()
                                                                 backStack.add(AircraftKey(aircraft.id, aircraft.callsign))
+                                                            }
+                                                        } else {
+                                                            null
+                                                        },
+                                                    onShowOnMap =
+                                                        if (search.field == null && search.saveAs == null) {
+                                                            { query, results ->
+                                                                lastSearch.set(query, results)
+                                                                backStack.removeLastOrNull()
+                                                                if (backStack.lastOrNull() is SearchResultsKey) backStack.removeLastOrNull()
+                                                                backStack.add(SearchResultsKey(query))
                                                             }
                                                         } else {
                                                             null
@@ -590,6 +606,20 @@ fun App(
                                                                 }
                                                         }
                                                     },
+                                                )
+                                            }
+                                            entry<SearchResultsKey> { key ->
+                                                SearchResultsSheet(
+                                                    key,
+                                                    map,
+                                                    onOpen = { result ->
+                                                        if ((result as? SearchResult.Place)?.category == COORDINATES_CATEGORY) {
+                                                            dropPin(result.location)
+                                                        } else {
+                                                            backStack.add(result.toKey())
+                                                        }
+                                                    },
+                                                    onEditQuery = { backStack.add(SearchKey(query = key.query)) },
                                                 )
                                             }
                                             entry<PlaceKey> { place ->

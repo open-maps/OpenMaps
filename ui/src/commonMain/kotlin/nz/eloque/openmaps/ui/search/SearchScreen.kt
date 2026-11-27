@@ -11,12 +11,15 @@ import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Contacts
 import androidx.compose.material.icons.filled.Flight
 import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.Map
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -36,6 +39,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import nz.eloque.compose_kit.dialog.FullscreenDialog
@@ -47,6 +51,7 @@ import nz.eloque.openmaps.core.model.SearchResult
 import nz.eloque.openmaps.ui.category.categoriesMatching
 import nz.eloque.openmaps.ui.category.icon
 import nz.eloque.openmaps.ui.category.label
+import nz.eloque.openmaps.ui.components.LoadState
 import nz.eloque.openmaps.ui.components.LoadStateContent
 import nz.eloque.openmaps.ui.components.icon
 import nz.eloque.openmaps.ui.flights.label
@@ -63,6 +68,7 @@ import nz.eloque.openmaps.ui.resources.home
 import nz.eloque.openmaps.ui.resources.no_results
 import nz.eloque.openmaps.ui.resources.recent
 import nz.eloque.openmaps.ui.resources.search_placeholder
+import nz.eloque.openmaps.ui.resources.search_show_all
 import nz.eloque.openmaps.ui.resources.work
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
@@ -77,6 +83,7 @@ fun SearchScreen(
     onCategory: ((PlaceCategory) -> Unit)? = null,
     initialQuery: String? = null,
     onFlight: ((Aircraft) -> Unit)? = null,
+    onShowOnMap: ((query: String, results: List<SearchResult>) -> Unit)? = null,
 ) {
     val viewModel = koinViewModel<SearchViewModel>()
     LaunchedEffect(initialQuery) { initialQuery?.let(viewModel::setQuery) }
@@ -106,6 +113,17 @@ fun SearchScreen(
                         onValueChange = viewModel::setQuery,
                         placeholder = { Text(stringResource(Res.string.search_placeholder)) },
                         singleLine = true,
+                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                        keyboardActions =
+                            KeyboardActions(
+                                onSearch = {
+                                    val found = (results as? LoadState.Loaded)?.value.orEmpty()
+                                    when {
+                                        found.size == 1 -> select(found.single())
+                                        found.size > 1 && onShowOnMap != null -> onShowOnMap(query.trim(), found)
+                                    }
+                                },
+                            ),
                         modifier = Modifier.weight(1f).focusRequester(focus),
                         colors =
                             TextFieldDefaults.colors(
@@ -149,7 +167,13 @@ fun SearchScreen(
                             state,
                             onRetry = { viewModel.setQuery(query) },
                             modifier = Modifier.align(Alignment.CenterHorizontally),
-                        ) { SearchResults(it, select) }
+                        ) { found ->
+                            SearchResults(
+                                found,
+                                select,
+                                onShowOnMap = onShowOnMap?.takeIf { found.size > 1 }?.let { show -> { show(query.trim(), found) } },
+                            )
+                        }
                 }
             }
         }
@@ -212,6 +236,7 @@ val FavouriteLabel.titleRes: StringResource?
 private fun SearchResults(
     results: List<SearchResult>,
     onSelect: (SearchResult) -> Unit,
+    onShowOnMap: (() -> Unit)?,
 ) {
     if (results.isEmpty()) {
         Text(
@@ -222,6 +247,9 @@ private fun SearchResults(
         return
     }
     LazyColumn {
+        onShowOnMap?.let { show ->
+            item { ResultRow(stringResource(Res.string.search_show_all), null, Icons.Default.Map, show) }
+        }
         items(results) { result ->
             ResultRow(result.name, result.area, result.icon) { onSelect(result) }
         }

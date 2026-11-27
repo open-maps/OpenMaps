@@ -2,6 +2,8 @@
 <resources>
     <string name="search_hint">Search here</string>
     <string name="search_placeholder">Place, address or stop</string>
+    <string name="search_show_all">Show all on the map</string>
+    <string name="search_edit">Change the search</string>
     <string name="back">Back</string>
     <string name="clear">Clear</string>
     <string name="no_results">No results</string>
