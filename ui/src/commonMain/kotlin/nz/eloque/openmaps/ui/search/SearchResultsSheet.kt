@@ -87,7 +87,9 @@ fun SearchResultsSheet(
     LaunchedEffect(results) {
         if (fitted || results.isEmpty()) return@LaunchedEffect
         fitted = true
-        val points = results.map { it.location }
+        val origin = map.userLocation ?: map.center
+        val nearest = results.minBy { it.location.distanceTo(origin) }.location
+        val points = results.map { it.location }.filter { it.distanceTo(nearest) <= FIT_RADIUS_METERS }
         if (points.size == 1) map.show(points.single()) else map.fit(points)
     }
 
@@ -129,3 +131,5 @@ fun SearchResultsSheet(
 
 private fun SearchResult.asPin(): SearchResult.Place =
     this as? SearchResult.Place ?: SearchResult.Place(id = null, name = name, location = location, area = area, category = null)
+
+private const val FIT_RADIUS_METERS = 25_000.0
