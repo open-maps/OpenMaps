@@ -40,6 +40,8 @@ import nz.eloque.openmaps.ui.resources.source_code
 import nz.eloque.openmaps.ui.resources.source_driving
 import nz.eloque.openmaps.ui.resources.source_driving_detail
 import nz.eloque.openmaps.ui.resources.source_fix_map
+import nz.eloque.openmaps.ui.resources.source_flights
+import nz.eloque.openmaps.ui.resources.source_flights_detail
 import nz.eloque.openmaps.ui.resources.source_fuel
 import nz.eloque.openmaps.ui.resources.source_fuel_detail
 import nz.eloque.openmaps.ui.resources.source_layers
@@ -114,6 +116,7 @@ fun DataSourcesPage(onBack: () -> Unit) =
             SourceRow(Res.string.source_media, Res.string.source_media_detail, "https://commons.wikimedia.org")
             SourceRow(Res.string.source_reviews, Res.string.source_reviews_detail, "https://mangrove.reviews")
             SourceRow(Res.string.source_weather, Res.string.source_weather_detail, "https://open-meteo.com")
+            SourceRow(Res.string.source_flights, Res.string.source_flights_detail, "https://www.adsb.lol")
             SourceRow(Res.string.source_layers, Res.string.source_layers_detail, "https://www.openseamap.org")
             SourceRow(Res.string.source_charging, Res.string.source_charging_detail, "https://openchargemap.org")
             SourceRow(Res.string.source_fuel, Res.string.source_fuel_detail, "https://www.tankpuls.de")

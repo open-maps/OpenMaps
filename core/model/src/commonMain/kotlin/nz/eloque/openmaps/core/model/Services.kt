@@ -14,6 +14,7 @@ enum class ServiceRole {
     WEATHER_WARNINGS,
     WEATHER_FORECAST,
     REVIEWS,
+    FLIGHTS,
 }
 
 enum class ServiceSettingKind {

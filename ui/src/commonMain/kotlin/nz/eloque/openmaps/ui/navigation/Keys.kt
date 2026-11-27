@@ -184,3 +184,10 @@ fun RouteEnd.toEndpoint(): Endpoint = Endpoint(name, location.latitude, location
 data class ListKey(
     val listId: Long,
 ) : NavKey
+
+/** One aircraft by its transponder address. [label] names it until its data arrives. */
+@Serializable
+data class AircraftKey(
+    val id: String,
+    val label: String?,
+) : NavKey

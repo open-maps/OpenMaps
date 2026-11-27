@@ -248,6 +248,7 @@
     <string name="layer_rain_radar">Rain radar</string>
     <string name="layer_clouds">Clouds</string>
     <string name="layer_vehicles">Live vehicles</string>
+    <string name="layer_flights">Planes</string>
     <string name="map_data">Map data</string>
     <string name="map_data_detail">The sources of everything on the map right now</string>
     <string name="radar_forecast">Forecast %1$s</string>
@@ -404,6 +405,7 @@
     <string name="role_rain_radar">Rain radar</string>
     <string name="role_weather_warnings">Weather warnings</string>
     <string name="role_reviews">Reviews</string>
+    <string name="role_flights">Planes</string>
     <string name="category_restaurants">Restaurants</string>
     <string name="category_cafes">Cafés</string>
     <string name="category_supermarkets">Supermarkets</string>
@@ -443,6 +445,18 @@
     <string name="source_roadworks_detail">Open data of road authorities such as Fintraffic, Bison Futé, NDW and Autobahn GmbH, collected on ori.eloque.nz. The link lists each source and its licence.</string>
     <string name="source_reviews">Reviews</string>
     <string name="source_reviews_detail">Mangrove, under CC BY 4.0</string>
+    <string name="source_flights">Planes</string>
+    <string name="source_flights_detail">Positions by adsb.lol under ODbL 1.0, from receivers run by its community. Routes, airports, airlines and aircraft models from VRS standing data under CC0.</string>
+    <string name="aircraft_lost">Not received right now. It may be out of range of the receivers.</string>
+    <string name="aircraft_route">%1$s → %2$s</string>
+    <string name="aircraft_usual_route">Usual route of this flight number</string>
+    <string name="aircraft_model">Aircraft: %1$s</string>
+    <string name="aircraft_on_ground">On the ground</string>
+    <string name="aircraft_altitude">Altitude %1$s</string>
+    <string name="aircraft_climbing">climbing</string>
+    <string name="aircraft_descending">descending</string>
+    <string name="aircraft_speed">Speed %1$s</string>
+    <string name="aircraft_source">Positions by adsb.lol under ODbL 1.0. Routes and aircraft from VRS standing data.</string>
     <string name="source_weather">Weather</string>
     <string name="source_weather_detail">Forecasts by Open-Meteo under CC BY 4.0. Radar, clouds, lightning and warnings by LibreWXR under CC BY 4.0, from national weather services.</string>
     <string name="source_layers">Map layers</string>
@@ -462,7 +476,7 @@
     <string name="api_keys">API keys</string>
     <string name="api_keys_detail">Some services work through a key built into OpenMaps and shared by everyone using it. If one runs into its limits, enter your own free key.</string>
     <string name="privacy">Privacy</string>
-    <string name="privacy_detail">There is no account and no tracking. Your location only leaves the device as part of the requests below, each sent only when you use the feature.\n\nTransitous gets searches, transit routes, departures and the area for live vehicles.\n\nori.eloque.nz gets car routes, the map area for roadworks and the area for fuel prices. The Valhalla server of FOSSGIS e.V. gets walking and cycling routes and car routes outside the map of ori.eloque.nz.\n\nNominatim gets the places you open, Photon the area for nearby places, Wikimedia the places you open for photos, summaries and travel guides, and Mangrove the places you open for reviews.\n\nOpen-Meteo gets the places you open and your destination for forecasts. LibreWXR gets them for weather warnings, along with your location, and the map area for the radar.\n\nThe price services of Austria and Germany get the area you search for fuel. Open Charge Map gets the area for charging stations.\n\nMap problems you report become public notes on OpenStreetMap. Map tiles come from OpenFreeMap and the tile servers of the layers you turn on.</string>
+    <string name="privacy_detail">There is no account and no tracking. Your location only leaves the device as part of the requests below, each sent only when you use the feature.\n\nTransitous gets searches, transit routes, departures and the area for live vehicles.\n\nori.eloque.nz gets car routes, the map area for roadworks and the area for fuel prices. The Valhalla server of FOSSGIS e.V. gets walking and cycling routes and car routes outside the map of ori.eloque.nz.\n\nNominatim gets the places you open, Photon the area for nearby places, Wikimedia the places you open for photos, summaries and travel guides, and Mangrove the places you open for reviews.\n\nOpen-Meteo gets the places you open and your destination for forecasts. LibreWXR gets them for weather warnings, along with your location, and the map area for the radar.\n\nadsb.lol gets the map area for planes and the planes you open. GitHub serves the route, airport and aircraft lists for the planes you open.\n\nThe price services of Austria and Germany get the area you search for fuel. Open Charge Map gets the area for charging stations.\n\nMap problems you report become public notes on OpenStreetMap. Map tiles come from OpenFreeMap and the tile servers of the layers you turn on.</string>
 
     <string name="opening_hours">Opening hours</string>
     <string name="open_now">Open</string>

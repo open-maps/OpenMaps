@@ -24,6 +24,7 @@ import androidx.compose.material.icons.filled.Cloud
 import androidx.compose.material.icons.filled.Construction
 import androidx.compose.material.icons.filled.DirectionsBus
 import androidx.compose.material.icons.filled.DirectionsTransit
+import androidx.compose.material.icons.filled.Flight
 import androidx.compose.material.icons.filled.Hiking
 import androidx.compose.material.icons.filled.Umbrella
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -69,6 +70,7 @@ import nz.eloque.openmaps.ui.resources.layer_buildings
 import nz.eloque.openmaps.ui.resources.layer_clouds
 import nz.eloque.openmaps.ui.resources.layer_cycling
 import nz.eloque.openmaps.ui.resources.layer_default
+import nz.eloque.openmaps.ui.resources.layer_flights
 import nz.eloque.openmaps.ui.resources.layer_hiking
 import nz.eloque.openmaps.ui.resources.layer_options_hint
 import nz.eloque.openmaps.ui.resources.layer_rain_radar
@@ -87,6 +89,7 @@ private val Details =
     listOf(
         MapLayer.TRANSIT,
         MapLayer.VEHICLES,
+        MapLayer.FLIGHTS,
         MapLayer.CYCLING,
         MapLayer.HIKING,
         MapLayer.ROADWORKS,
@@ -253,6 +256,7 @@ internal val MapLayer.label: StringResource
             MapLayer.RAIN_RADAR -> Res.string.layer_rain_radar
             MapLayer.CLOUDS -> Res.string.layer_clouds
             MapLayer.VEHICLES -> Res.string.layer_vehicles
+            MapLayer.FLIGHTS -> Res.string.layer_flights
         }
 
 private val MapLayer.badge: ImageVector?
@@ -266,6 +270,7 @@ private val MapLayer.badge: ImageVector?
             MapLayer.RAIN_RADAR -> Icons.Default.Umbrella
             MapLayer.CLOUDS -> Icons.Default.Cloud
             MapLayer.VEHICLES -> Icons.Default.DirectionsBus
+            MapLayer.FLIGHTS -> Icons.Default.Flight
             else -> null
         }
 
@@ -298,6 +303,9 @@ private val MapLayer.drawing: DrawScope.() -> Unit
             }
             MapLayer.VEHICLES -> {
                 { drawVehicles() }
+            }
+            MapLayer.FLIGHTS -> {
+                { drawFlights() }
             }
             MapLayer.CLOUDS -> {
                 { drawClouds() }
@@ -531,3 +539,23 @@ private fun DrawScope.drawVehicles() {
 private val VehicleTrack = Color(0xFFB0B7C3)
 private val VehicleRed = Color(0xFFD32F2F)
 private val VehiclePurple = Color(0xFF7B1FA2)
+
+private fun DrawScope.drawFlights() {
+    land()
+    val route =
+        Path().apply {
+            moveTo(size.width * 0.1f, size.height * 0.85f)
+            quadraticTo(size.width * 0.45f, size.height * 0.05f, size.width * 0.95f, size.height * 0.3f)
+        }
+    drawPath(
+        route,
+        VehicleTrack,
+        style = Stroke(2.dp.toPx(), pathEffect = PathEffect.dashPathEffect(floatArrayOf(6.dp.toPx(), 4.dp.toPx()))),
+    )
+    listOf(Offset(size.width * 0.3f, size.height * 0.45f), Offset(size.width * 0.72f, size.height * 0.24f)).forEach { center ->
+        drawCircle(Color.White, radius = 8.dp.toPx(), center = center)
+        drawCircle(FlightBlue, radius = 6.5.dp.toPx(), center = center)
+    }
+}
+
+private val FlightBlue = Color(0xFF1A73E8)

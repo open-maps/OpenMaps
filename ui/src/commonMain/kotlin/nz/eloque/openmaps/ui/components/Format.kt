@@ -42,6 +42,15 @@ fun formatHeight(
         DistanceUnit.IMPERIAL -> "${(meters / METERS_PER_FOOT).roundToInt()} ft"
     }
 
+fun formatSpeed(
+    metersPerSecond: Double,
+    unit: DistanceUnit = DistanceUnit.METRIC,
+): String =
+    when (unit) {
+        DistanceUnit.METRIC -> "${(metersPerSecond * 3.6).roundToInt()} km/h"
+        DistanceUnit.IMPERIAL -> "${(metersPerSecond * 3600 / METERS_PER_MILE).roundToInt()} mph"
+    }
+
 /** Three decimals, as pumps show them, with the symbol for euros. */
 fun formatPrice(
     price: Double,

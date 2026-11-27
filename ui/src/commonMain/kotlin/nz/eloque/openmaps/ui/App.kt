@@ -67,6 +67,7 @@ import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
@@ -143,12 +144,15 @@ import nz.eloque.openmaps.ui.category.CategoryChips
 import nz.eloque.openmaps.ui.category.CategoryChipsHeight
 import nz.eloque.openmaps.ui.category.CategorySheet
 import nz.eloque.openmaps.ui.category.label
+import nz.eloque.openmaps.ui.components.FlightsOnMap
 import nz.eloque.openmaps.ui.components.StopsOnMap
 import nz.eloque.openmaps.ui.components.VehiclesOnMap
 import nz.eloque.openmaps.ui.components.clockTime
 import nz.eloque.openmaps.ui.directions.DirectionsSheet
 import nz.eloque.openmaps.ui.directions.RouteSheet
 import nz.eloque.openmaps.ui.directions.TripSheet
+import nz.eloque.openmaps.ui.flights.AircraftSheet
+import nz.eloque.openmaps.ui.flights.FLIGHTS_ATTRIBUTION
 import nz.eloque.openmaps.ui.guidance.ActiveTrip
 import nz.eloque.openmaps.ui.guidance.NavigationBanner
 import nz.eloque.openmaps.ui.guidance.NavigationSheet
@@ -161,6 +165,7 @@ import nz.eloque.openmaps.ui.layers.MapDataSheet
 import nz.eloque.openmaps.ui.layers.RadarTimeline
 import nz.eloque.openmaps.ui.measure.MeasureSheet
 import nz.eloque.openmaps.ui.navigation.AboutKey
+import nz.eloque.openmaps.ui.navigation.AircraftKey
 import nz.eloque.openmaps.ui.navigation.CategoryKey
 import nz.eloque.openmaps.ui.navigation.DataSourcesKey
 import nz.eloque.openmaps.ui.navigation.DirectionsField
@@ -245,6 +250,7 @@ private val navConfiguration =
                     subclass(RouteKey::class)
                     subclass(CategoryKey::class)
                     subclass(TripKey::class)
+                    subclass(AircraftKey::class)
                     subclass(RoadEventKey::class)
                     subclass(NavigationKey::class)
                     subclass(TransitGuidanceKey::class)
@@ -366,6 +372,7 @@ fun App(
         val rainRadar = koinInject<RainRadar>()
         val mapLayers by settings.mapLayers.collectAsStateWithLifecycle()
         VehiclesOnMap(map, MapLayer.VEHICLES in mapLayers) { tripId, _ -> backStack.add(TripKey(tripId, null)) }
+        FlightsOnMap(map, MapLayer.FLIGHTS in mapLayers) { id -> backStack.add(AircraftKey(id, null)) }
         val radarOn = MapLayer.RAIN_RADAR in mapLayers
         val weatherOn = radarOn || MapLayer.CLOUDS in mapLayers
         val lifecycle = LocalLifecycleOwner.current.lifecycle
@@ -393,8 +400,9 @@ fun App(
         if (showLayers) LayersSheet(colourSchemes = map.radar?.colourSchemes.orEmpty(), onDismiss = { showLayers = false })
         var attributions by remember { mutableStateOf<List<String>?>(null) }
         attributions?.let { MapDataSheet(it, onDismiss = { attributions = null }) }
+        val flightsShown by rememberUpdatedState(MapLayer.FLIGHTS in mapLayers)
         DisposableEffect(map) {
-            map.onAttributionClick = { attributions = it }
+            map.onAttributionClick = { attributions = if (flightsShown) it + FLIGHTS_ATTRIBUTION else it }
             onDispose { map.onAttributionClick = null }
         }
         DisposableEffect(map) {
@@ -627,6 +635,7 @@ fun App(
                                                 )
                                             }
                                             entry<TripKey> { TripSheet(it, map) }
+                                            entry<AircraftKey> { AircraftSheet(it, map) }
                                             entry<RoadEventKey> { RoadEventSheet(it) }
                                             entry<NavigationKey> { NavigationSheet(it, map, onEnd = { backStack.removeLastOrNull() }) }
                                             entry<TransitGuidanceKey> {

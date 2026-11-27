@@ -2,6 +2,7 @@ package nz.eloque.openmaps.ui
 
 import nz.eloque.openmaps.core.model.TripGuide
 import nz.eloque.openmaps.ui.category.CategoryViewModel
+import nz.eloque.openmaps.ui.components.FlightTracker
 import nz.eloque.openmaps.ui.directions.DirectionsViewModel
 import nz.eloque.openmaps.ui.directions.ItineraryCache
 import nz.eloque.openmaps.ui.directions.TripViewModel
@@ -26,6 +27,7 @@ val uiModule =
             PlaceViewModel(get(), get(), get(), getOrNull(), params.getOrNull(), params.get(), params.get(), params.get(), params.get())
         }
         single { ItineraryCache() }
+        single { FlightTracker() }
         single { TrackRecorder(get(), get()) }
         viewModel { params -> DirectionsViewModel(get(), get(), get(), get(), params.get()) }
         single { ActiveTrip() }

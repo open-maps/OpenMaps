@@ -19,6 +19,8 @@ import nz.eloque.openmaps.core.platform.Files
 import nz.eloque.openmaps.core.platform.ReminderScheduler
 import nz.eloque.openmaps.core.platform.Sharer
 import nz.eloque.openmaps.core.platform.createHttpClient
+import nz.eloque.openmaps.data.flights.flightsModule
+import nz.eloque.openmaps.data.flights.flightsServiceSettings
 import nz.eloque.openmaps.data.fuel.fuelModule
 import nz.eloque.openmaps.data.fuel.fuelServiceSettings
 import nz.eloque.openmaps.data.geocoding.geocodingModule
@@ -71,7 +73,7 @@ class OpenMapsApplication : Application() {
                     single {
                         ServiceCatalog(
                             transitServiceSettings + routingServiceSettings + geocodingServiceSettings + fuelServiceSettings +
-                                weatherServiceSettings + reviewsServiceSettings,
+                                weatherServiceSettings + reviewsServiceSettings + flightsServiceSettings,
                         )
                     }
                     single { AndroidFiles(this@OpenMapsApplication) }
@@ -111,6 +113,7 @@ class OpenMapsApplication : Application() {
                 fuelModule,
                 weatherModule(language = { Locale.getDefault().language }),
                 reviewsModule,
+                flightsModule,
                 storageModule,
                 uiModule,
             )

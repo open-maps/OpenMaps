@@ -85,6 +85,7 @@ dependencies {
     implementation(project(":data:fuel"))
     implementation(project(":data:weather"))
     implementation(project(":data:reviews"))
+    implementation(project(":data:flights"))
     implementation(project(":map"))
     implementation(libs.maplibre.compose)
     implementation(libs.androidx.car.app)

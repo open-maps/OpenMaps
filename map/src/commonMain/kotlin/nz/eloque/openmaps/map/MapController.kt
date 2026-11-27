@@ -130,6 +130,7 @@ class MapController internal constructor(
     private val radarFrameState: MutableState<Int>,
     private val cloudFrameState: MutableState<Int>,
     private val vehiclesState: MutableState<List<VehicleMarker>>,
+    private val aircraftState: MutableState<List<AircraftMarker>>,
 ) {
     val isLocationPermissionGranted: Boolean
         get() = location.permission is LocationPermission.Granted
@@ -226,6 +227,11 @@ class MapController internal constructor(
     var vehicles: List<VehicleMarker> by vehiclesState
 
     var onVehicleClick: ((VehicleMarker) -> Unit)? by mutableStateOf(null)
+
+    /** Aircraft drawn where they are now. */
+    var aircraft: List<AircraftMarker> by aircraftState
+
+    var onAircraftClick: ((AircraftMarker) -> Unit)? by mutableStateOf(null)
 
     /** Road events drawn on the map, or null for none. */
     var roadEvents: RoadEventTiles? by roadEventsState
@@ -384,6 +390,7 @@ fun rememberMapController(
     val radarFrameState = remember { mutableStateOf(0) }
     val cloudFrameState = remember { mutableStateOf(0) }
     val vehiclesState = remember { mutableStateOf<List<VehicleMarker>>(emptyList(), referentialEqualityPolicy()) }
+    val aircraftState = remember { mutableStateOf<List<AircraftMarker>>(emptyList(), referentialEqualityPolicy()) }
     val puckIcon =
         rememberVectorPainter(Icons.Default.Navigation).let { painter ->
             image(remember(painter, markerColor) { BadgePainter(painter, markerColor, Color.White) }, size = DpSize(30.dp, 30.dp))
@@ -455,6 +462,7 @@ fun rememberMapController(
                     )
                 }
             }
+            AircraftLayers(aircraftState.value, dark, markerColor) { controllerRef[0]?.onAircraftClick?.invoke(it) }
             val stops = stopsState.value
             if (stops.isNotEmpty()) {
                 val features =
@@ -572,6 +580,7 @@ fun rememberMapController(
             radarFrameState,
             cloudFrameState,
             vehiclesState,
+            aircraftState,
         )
     }
         .also { controllerRef[0] = it }
