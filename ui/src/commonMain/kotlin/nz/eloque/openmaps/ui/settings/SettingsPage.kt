@@ -15,6 +15,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -50,8 +51,14 @@ import nz.eloque.openmaps.ui.components.Page
 import nz.eloque.openmaps.ui.resources.Res
 import nz.eloque.openmaps.ui.resources.api_keys
 import nz.eloque.openmaps.ui.resources.api_keys_detail
+import nz.eloque.openmaps.ui.resources.cancel
 import nz.eloque.openmaps.ui.resources.map_cache_clear
+import nz.eloque.openmaps.ui.resources.map_cache_custom
+import nz.eloque.openmaps.ui.resources.map_cache_custom_size
 import nz.eloque.openmaps.ui.resources.map_cache_detail
+import nz.eloque.openmaps.ui.resources.map_cache_minimum
+import nz.eloque.openmaps.ui.resources.map_cache_set
+import nz.eloque.openmaps.ui.resources.map_cache_size_label
 import nz.eloque.openmaps.ui.resources.map_storage
 import nz.eloque.openmaps.ui.resources.megabytes
 import nz.eloque.openmaps.ui.resources.role_active_routing
@@ -94,6 +101,17 @@ fun SettingsPage(onBack: () -> Unit) =
         val speedingAlert by settings.speedingAlert.collectAsStateWithLifecycle()
         val cacheMegabytes by settings.mapCacheMegabytes.collectAsStateWithLifecycle()
         val scope = rememberCoroutineScope()
+        var customCache by rememberSaveable { mutableStateOf(false) }
+        if (customCache) {
+            CacheSizeDialog(
+                current = cacheMegabytes,
+                onDismiss = { customCache = false },
+                onConfirm = {
+                    settings.setMapCacheMegabytes(it)
+                    customCache = false
+                },
+            )
+        }
         val services = koinInject<ServiceCatalog>().settings
 
         Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).navigationBarsPadding()) {
@@ -140,6 +158,20 @@ fun SettingsPage(onBack: () -> Unit) =
                         label = { Text(stringResource(Res.string.megabytes, megabytes)) },
                     )
                 }
+                val custom = cacheMegabytes !in CacheSizes
+                FilterChip(
+                    selected = custom,
+                    onClick = { customCache = true },
+                    label = {
+                        Text(
+                            if (custom) {
+                                stringResource(Res.string.map_cache_custom_size, cacheMegabytes)
+                            } else {
+                                stringResource(Res.string.map_cache_custom)
+                            },
+                        )
+                    },
+                )
             }
             TextButton(
                 onClick = { scope.launch { clearTileCache() } },
@@ -251,3 +283,37 @@ private val ServiceRole.label: StringResource
             ServiceRole.WEATHER_FORECAST -> Res.string.role_weather_forecast
         }
 private val CacheSizes = listOf(50, 100, 250, 500, 1000)
+
+@Composable
+private fun CacheSizeDialog(
+    current: Int,
+    onDismiss: () -> Unit,
+    onConfirm: (Int) -> Unit,
+) {
+    var text by rememberSaveable { mutableStateOf(current.toString()) }
+    val megabytes = text.trim().toIntOrNull()?.takeIf { it >= MIN_CACHE_MEGABYTES }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(Res.string.map_cache_custom)) },
+        text = {
+            OutlinedTextField(
+                value = text,
+                onValueChange = { text = it.filter(Char::isDigit).take(MAX_CACHE_DIGITS) },
+                label = { Text(stringResource(Res.string.map_cache_size_label)) },
+                supportingText = { Text(stringResource(Res.string.map_cache_minimum, MIN_CACHE_MEGABYTES)) },
+                isError = megabytes == null,
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            )
+        },
+        confirmButton = {
+            TextButton(onClick = { megabytes?.let(onConfirm) }, enabled = megabytes != null) {
+                Text(stringResource(Res.string.map_cache_set))
+            }
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(Res.string.cancel)) } },
+    )
+}
+
+private const val MIN_CACHE_MEGABYTES = 10
+private const val MAX_CACHE_DIGITS = 6

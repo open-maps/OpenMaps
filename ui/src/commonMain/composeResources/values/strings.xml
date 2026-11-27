@@ -347,6 +347,11 @@
     <string name="offline_not_included">Contains the base map with rail lines and places. Terrain, hiking and cycling routes and seamarks only work offline where you have looked at them before.</string>
     <string name="map_cache_detail">Maps you have looked at are kept up to this size, so they open faster and work without a connection. Downloaded areas come on top.</string>
     <string name="map_cache_clear">Clear viewed maps</string>
+    <string name="map_cache_custom">Custom size</string>
+    <string name="map_cache_custom_size">Custom: %1$d MB</string>
+    <string name="map_cache_size_label">Size in MB</string>
+    <string name="map_cache_minimum">At least %1$d MB</string>
+    <string name="map_cache_set">Set</string>
     <string name="megabytes">%1$d MB</string>
     <string name="service_server">%1$s (%2$s)</string>
     <string name="service_key">%1$s key</string>
