@@ -29,6 +29,13 @@ data object PrivacyKey : PageKey
 @Serializable
 data object SettingsKey : PageKey
 
+@Serializable
+data object OfflineMapsKey : PageKey
+
+/** Choosing a map area on screen to download. */
+@Serializable
+data object DownloadAreaKey : NavKey
+
 /** Places of one category in the visible map area. */
 @Serializable
 data class CategoryKey(

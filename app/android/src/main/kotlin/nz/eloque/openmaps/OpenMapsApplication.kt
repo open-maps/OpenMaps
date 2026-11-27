@@ -34,6 +34,7 @@ import nz.eloque.openmaps.data.transit.transitModule
 import nz.eloque.openmaps.data.transit.transitServiceSettings
 import nz.eloque.openmaps.data.weather.weatherModule
 import nz.eloque.openmaps.data.weather.weatherServiceSettings
+import nz.eloque.openmaps.map.OfflineMaps
 import nz.eloque.openmaps.navigation.AndroidVoiceGuidance
 import nz.eloque.openmaps.navigation.NavigationService
 import nz.eloque.openmaps.navigation.SpeedingAlert
@@ -60,6 +61,7 @@ class OpenMapsApplication : Application() {
             modules(
                 module {
                     single { createHttpClient(USER_AGENT) }
+                    single { OfflineMaps(OkHttpMapFiles(USER_AGENT), MainScope()) }
                     single<ReminderScheduler> { reminders }
                     single<LocationUpdates> { AndroidLocationUpdates(this@OpenMapsApplication) }
                     single<VoiceGuidance> {
@@ -118,6 +120,7 @@ class OpenMapsApplication : Application() {
                 uiModule,
             )
         }
+        get<OfflineMaps>().install()
         get<VoiceGuidance>()
         SpeedingAlert(get(), get(), MainScope())
         MainScope().launch {

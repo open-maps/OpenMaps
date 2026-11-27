@@ -34,6 +34,7 @@ import androidx.compose.material.icons.filled.Layers
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.MyLocation
 import androidx.compose.material.icons.outlined.Bookmarks
+import androidx.compose.material.icons.outlined.DownloadForOffline
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Map
 import androidx.compose.material.icons.outlined.Settings
@@ -171,12 +172,14 @@ import nz.eloque.openmaps.ui.navigation.CategoryKey
 import nz.eloque.openmaps.ui.navigation.DataSourcesKey
 import nz.eloque.openmaps.ui.navigation.DirectionsField
 import nz.eloque.openmaps.ui.navigation.DirectionsKey
+import nz.eloque.openmaps.ui.navigation.DownloadAreaKey
 import nz.eloque.openmaps.ui.navigation.Endpoint
 import nz.eloque.openmaps.ui.navigation.HomeKey
 import nz.eloque.openmaps.ui.navigation.ListKey
 import nz.eloque.openmaps.ui.navigation.MapLink
 import nz.eloque.openmaps.ui.navigation.MeasureKey
 import nz.eloque.openmaps.ui.navigation.NavigationKey
+import nz.eloque.openmaps.ui.navigation.OfflineMapsKey
 import nz.eloque.openmaps.ui.navigation.PageKey
 import nz.eloque.openmaps.ui.navigation.PlaceKey
 import nz.eloque.openmaps.ui.navigation.PrivacyKey
@@ -193,6 +196,8 @@ import nz.eloque.openmaps.ui.navigation.TripsKey
 import nz.eloque.openmaps.ui.navigation.parseMapLink
 import nz.eloque.openmaps.ui.navigation.toEndpoint
 import nz.eloque.openmaps.ui.navigation.toKey
+import nz.eloque.openmaps.ui.offline.DownloadAreaSheet
+import nz.eloque.openmaps.ui.offline.OfflineMapsPage
 import nz.eloque.openmaps.ui.place.PlaceSheet
 import nz.eloque.openmaps.ui.resources.Res
 import nz.eloque.openmaps.ui.resources.about
@@ -203,6 +208,7 @@ import nz.eloque.openmaps.ui.resources.imported_track
 import nz.eloque.openmaps.ui.resources.map_layers
 import nz.eloque.openmaps.ui.resources.menu
 import nz.eloque.openmaps.ui.resources.my_location
+import nz.eloque.openmaps.ui.resources.offline_maps
 import nz.eloque.openmaps.ui.resources.parked_car
 import nz.eloque.openmaps.ui.resources.parked_since
 import nz.eloque.openmaps.ui.resources.record_track
@@ -244,6 +250,8 @@ private val navConfiguration =
                     subclass(MeasureKey::class)
                     subclass(ListKey::class)
                     subclass(SettingsKey::class)
+                    subclass(OfflineMapsKey::class)
+                    subclass(DownloadAreaKey::class)
                     subclass(SearchKey::class)
                     subclass(PlaceKey::class)
                     subclass(StopKey::class)
@@ -451,6 +459,7 @@ fun App(
                 MenuEntry(Icons.Default.FiberManualRecord, stringResource(Res.string.record_track)) {
                     if (map.isLocationPermissionGranted) recorder.start() else map.requestLocationPermission()
                 }.takeIf { recording == null },
+                MenuEntry(Icons.Outlined.DownloadForOffline, stringResource(Res.string.offline_maps)) { backStack.add(OfflineMapsKey) },
                 MenuEntry(Icons.Outlined.Settings, stringResource(Res.string.settings)) { backStack.add(SettingsKey) },
                 MenuEntry(Icons.Outlined.Info, stringResource(Res.string.about)) { backStack.add(AboutKey) },
             )
@@ -649,6 +658,12 @@ fun App(
                                             }
                                             entry<TripKey> { TripSheet(it, map) }
                                             entry<AircraftKey> { AircraftSheet(it, map) }
+                                            entry<DownloadAreaKey> {
+                                                DownloadAreaSheet(map, onStarted = {
+                                                    backStack.removeLastOrNull()
+                                                    backStack.add(OfflineMapsKey)
+                                                })
+                                            }
                                             entry<RoadEventKey> { RoadEventSheet(it) }
                                             entry<NavigationKey> { NavigationSheet(it, map, onEnd = { backStack.removeLastOrNull() }) }
                                             entry<TransitGuidanceKey> {
@@ -749,6 +764,15 @@ fun App(
                         entryProvider {
                             entry<NoPage> { Box(Modifier.fillMaxSize()) }
                             entry<SettingsKey> { SettingsPage(onBack = { backStack.removeLastOrNull() }) }
+                            entry<OfflineMapsKey> {
+                                OfflineMapsPage(
+                                    onBack = { backStack.removeLastOrNull() },
+                                    onDownloadArea = {
+                                        backStack.removeLastOrNull()
+                                        backStack.add(DownloadAreaKey)
+                                    },
+                                )
+                            }
                             entry<AboutKey> {
                                 AboutPage(
                                     version,
