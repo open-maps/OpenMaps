@@ -55,7 +55,7 @@ fun interface MapFileFetcher {
     ): FetchedFile
 }
 
-enum class OfflineAreaState { DOWNLOADING, PAUSED, COMPLETE, TOO_LARGE, FAILED }
+enum class OfflineAreaState { DOWNLOADING, PAUSED, COMPLETE, FAILED }
 
 /** A map area kept on the device for use without a connection. */
 class OfflineArea internal constructor(
@@ -74,7 +74,6 @@ class OfflineArea internal constructor(
 private data class AreaInfo(
     val name: String,
     val completedAt: Long? = null,
-    val tooLarge: Boolean = false,
 )
 
 /**
@@ -150,7 +149,7 @@ class OfflineMaps(
     fun update(area: OfflineArea) =
         scope.launch {
             val pack = area.pack
-            pack.setMetadata(encode(pack.info().copy(completedAt = null, tooLarge = false)))
+            pack.setMetadata(encode(pack.info().copy(completedAt = null)))
             ready().invalidate(pack)
             resume(area)
         }
@@ -163,13 +162,8 @@ class OfflineMaps(
         for (area in areas) {
             val pack = area.pack
             val info = pack.info()
-            when {
-                area.state == OfflineAreaState.DOWNLOADING && area.bytes > MAX_DOWNLOAD_BYTES -> {
-                    storage.pause(pack)
-                    pack.setMetadata(encode(info.copy(tooLarge = true)))
-                }
-                area.state == OfflineAreaState.COMPLETE && info.completedAt == null ->
-                    pack.setMetadata(encode(info.copy(completedAt = Clock.System.now().toEpochMilliseconds())))
+            if (area.state == OfflineAreaState.COMPLETE && info.completedAt == null) {
+                pack.setMetadata(encode(info.copy(completedAt = Clock.System.now().toEpochMilliseconds())))
             }
         }
     }
@@ -210,7 +204,6 @@ private fun OfflinePack.toArea(): OfflineArea {
     val healthy = progress as? DownloadProgress.Healthy
     val state =
         when {
-            info.tooLarge -> OfflineAreaState.TOO_LARGE
             progress is DownloadProgress.Error || progress is DownloadProgress.TileLimitExceeded -> OfflineAreaState.FAILED
             healthy?.status is DownloadStatus.Complete -> OfflineAreaState.COMPLETE
             healthy?.status is DownloadStatus.Downloading -> OfflineAreaState.DOWNLOADING
@@ -258,9 +251,8 @@ private fun tileY(
     return floor(y).toInt().coerceIn(0, (1 shl zoom) - 1)
 }
 
-/** OpenFreeMap allows offline downloads of at most this many tiles and bytes each, with at most this many parallel requests. */
+/** OpenFreeMap allows offline downloads of at most this many tiles each, with at most this many parallel requests. */
 const val MAX_DOWNLOAD_TILES = 3_000
-const val MAX_DOWNLOAD_BYTES = 50L * 1_000_000
 private const val MAX_PARALLEL_REQUESTS = 4
 
 private const val SERVER = "https://tiles.openfreemap.org/"

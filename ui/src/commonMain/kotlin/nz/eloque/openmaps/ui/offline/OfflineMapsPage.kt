@@ -41,7 +41,6 @@ import nz.eloque.openmaps.ui.resources.offline_area_downloading
 import nz.eloque.openmaps.ui.resources.offline_area_failed
 import nz.eloque.openmaps.ui.resources.offline_area_outdated
 import nz.eloque.openmaps.ui.resources.offline_area_paused
-import nz.eloque.openmaps.ui.resources.offline_area_too_large
 import nz.eloque.openmaps.ui.resources.offline_download_area
 import nz.eloque.openmaps.ui.resources.offline_empty
 import nz.eloque.openmaps.ui.resources.offline_explanation
@@ -119,7 +118,7 @@ private fun AreaRow(
                     area.summary(),
                     style = MaterialTheme.typography.bodyMedium,
                     color =
-                        if (area.state == OfflineAreaState.TOO_LARGE || area.state == OfflineAreaState.FAILED) {
+                        if (area.state == OfflineAreaState.FAILED) {
                             MaterialTheme.colorScheme.error
                         } else {
                             MaterialTheme.colorScheme.onSurfaceVariant
@@ -137,7 +136,6 @@ private fun AreaRow(
                     IconButton(onClick = onUpdate, enabled = canStart) {
                         Icon(Icons.Default.Refresh, stringResource(Res.string.offline_update))
                     }
-                OfflineAreaState.TOO_LARGE -> Unit
             }
             IconButton(onClick = onDelete) { Icon(Icons.Default.Delete, stringResource(Res.string.delete)) }
         }
@@ -158,7 +156,6 @@ private fun OfflineArea.summary(): String {
     return when (state) {
         OfflineAreaState.DOWNLOADING -> stringResource(Res.string.offline_area_downloading, size)
         OfflineAreaState.PAUSED -> stringResource(Res.string.offline_area_paused, size)
-        OfflineAreaState.TOO_LARGE -> stringResource(Res.string.offline_area_too_large)
         OfflineAreaState.FAILED -> stringResource(Res.string.offline_area_failed)
         OfflineAreaState.COMPLETE -> {
             val completed = completedAt

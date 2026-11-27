@@ -327,7 +327,7 @@
     <string name="servers_detail">Leave empty to use the public services. Set an address to use your own server.</string>
     <string name="map_storage">Map storage</string>
     <string name="offline_maps">Offline maps</string>
-    <string name="offline_explanation">Downloaded areas show the map without a connection. Each area can have up to 3,000 map tiles and 50 MB, about a city with its surroundings. The map server publishes a new map every week, so update areas before a trip.</string>
+    <string name="offline_explanation">Downloaded areas show the map without a connection. Each area can have up to 3,000 map tiles, about a city with its surroundings. The map server publishes a new map every week, so update areas before a trip.</string>
     <string name="offline_download_area">Download an area</string>
     <string name="offline_empty">No areas downloaded yet.</string>
     <string name="offline_pause">Pause</string>
@@ -337,7 +337,6 @@
     <string name="offline_area_paused">Paused · %1$s</string>
     <string name="offline_area_complete">%1$s · from %2$s</string>
     <string name="offline_area_outdated">%1$s · from %2$s · update for current data</string>
-    <string name="offline_area_too_large">Stopped at 50 MB, too much detail for one download. Delete it and choose a smaller area.</string>
     <string name="offline_area_failed">Download failed. Resume to try again.</string>
     <string name="offline_frame_hint">Move and zoom the map to show the area you want.</string>
     <string name="offline_tiles">%1$d of at most %2$d map tiles</string>
